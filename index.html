@@ -237,6 +237,9 @@ td.delta-down{color:#FFC9BF;font-weight:700}
 .select-option{display:block;width:100%;min-height:34px;padding:8px 10px;margin:2px 0;border-radius:7px;text-align:left;border:1px solid transparent;background:transparent;color:#F2F7FF;white-space:normal;overflow-wrap:anywhere;font-size:12px;cursor:pointer}
 .select-option:hover,.select-option:focus-visible{background:#2A5E9D;border-color:#7BB7EA;color:#fff;outline:none}
 .select-option[aria-selected=true]{background:#E1261C;border-color:#FF7C72;color:#fff;font-weight:800}
+.select-option[aria-selected=true]::before{content:'✓ ';font-weight:900}
+.select-menu[aria-multiselectable=true] .select-option[aria-selected=false]::before{content:'□ ';opacity:.72}
+.select-menu[aria-multiselectable=true] .select-option[aria-selected=true]::before{content:'☑ ';}
 .select-option[hidden]{display:none}
 .select-empty{padding:12px;color:#BDD6E6;font-size:12px}
 .kpi[data-category],.donutwrap [data-category],.legend-row[data-category],.hbin[data-bin],.rankitem.clickable,tbody tr[data-row-index]{cursor:pointer}
@@ -599,7 +602,7 @@ tbody tr.row-selected td{background:rgba(225,38,28,.2);border-top:1px solid #E12
 
     <div class="foot">
       <span class="logo-strap">CEVA LOGISTICS &#8226; CONTROL TOWER</span>
-      <span>Fonte: Apoio Transportadora + Apoio Clientes + Base Orion Ativa &#8226; base filtr&#225;vel &#8226; regra &#916; = Orion &#8722; Compras</span>
+      <span>Fonte: Base Transportadora + Apoio Clientes + Base Orion Ativa &#8226; ID B/E &#8226; regi&#227;o por UF &#8226; regra &#916; = Orion &#8722; Compras</span>
       <span id="counter" aria-live="polite"></span>
     </div>
   </div>
@@ -668,14 +671,12 @@ function chooseRoute(r){
   update();
 }
 function chooseUF(value, cat){
-  const current = $('uf').value;
-  $('uf').value = current === value ? '' : value;
+  toggleSelectSelection('uf', value);
   if(cat){ drill.category = drill.category === cat ? null : cat; }
   update();
 }
 function chooseClient(value, cat){
-  const current=$('client').value;
-  $('client').value = current === value ? '' : value;
+  toggleSelectSelection('client', value);
   if(cat){ drill.category = drill.category === cat ? null : cat; }
   update();
 }
@@ -695,13 +696,15 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 function normalize(r){
+  const ufNorm = (r.uf ?? '').toString().trim().toUpperCase();
   return {
+    id: (r.id ?? '').toString().trim(),
     cliente: (r.cliente ?? '').toString().trim(),
-    uf: (r.uf ?? '').toString().trim().toUpperCase(),
+    uf: ufNorm,
     cidade: (r.cidade ?? '').toString().trim(),
     orion: num(r.orion), compras: num(r.compras),
     ponto: normalizeTipoOperacional(r.ponto),
-    regiao: (r.regiao ?? '').toString().trim(),
+    regiao: brazilRegionFromUF(ufNorm) || normalizeBrazilRegion(r.regiao) || (r.regiao ?? '').toString().trim(),
     statusOrion: normalizeStatusOrion(r.statusOrion)
   };
 }
@@ -725,16 +728,19 @@ function status(r){
 }
 
 /* ============ filtros ============ */
+function multiContains(selected, value){
+  return !selected || !selected.length || selected.includes(value);
+}
 function rows(){
   const f = readFilters();
   const q = f.q.toLowerCase();
   return DATA.filter(r => {
-    if(f.cliente && r.cliente !== f.cliente) return false;
-    if(f.regiao && r.regiao !== f.regiao) return false;
-    if(f.uf && r.uf !== f.uf) return false;
-    if(f.ponto && r.ponto !== f.ponto) return false;
-    if(f.orionStatus && r.statusOrion !== f.orionStatus) return false;
-    if(q && !((r.cliente + ' ' + r.uf + ' ' + r.cidade + ' ' + r.ponto + ' ' + r.regiao + ' ' + r.statusOrion).toLowerCase().includes(q))) return false;
+    if(!multiContains(f.cliente, r.cliente)) return false;
+    if(!multiContains(f.regiao, r.regiao)) return false;
+    if(!multiContains(f.uf, r.uf)) return false;
+    if(!multiContains(f.ponto, r.ponto)) return false;
+    if(!multiContains(f.orionStatus, r.statusOrion)) return false;
+    if(q && !((r.cliente + ' ' + r.uf + ' ' + r.cidade + ' ' + r.ponto + ' ' + r.regiao + ' ' + r.statusOrion + ' ' + (r.id||'')).toLowerCase().includes(q))) return false;
     const d = delta(r);
     if(f.onlyDiff && !(d !== null && d !== 0)) return false;
     if(f.sev > 0 && !(d !== null && Math.abs(d) >= f.sev)) return false;
@@ -746,8 +752,8 @@ function rows(){
 }
 function readFilters(){
   return {
-    cliente: $('client').value, regiao: $('region').value, uf: $('uf').value,
-    ponto: $('point').value, orionStatus: $('orionStatus').value, q: $('search').value.trim(),
+    cliente: getSelectValues('client'), regiao: getSelectValues('region'), uf: getSelectValues('uf'),
+    ponto: getSelectValues('point'), orionStatus: getSelectValues('orionStatus'), q: $('search').value.trim(),
     sev: parseInt($('sev').value, 10) || 0, onlyDiff: $('onlyDiff').checked
   };
 }
@@ -934,7 +940,7 @@ function renderUF(rs){
   const arr = [...map.entries()].map(([uf, v]) => ({uf, ...v, tot: v.up + v.down})).sort((a,b) => b.tot - a.tot).slice(0, 10);
   const max = Math.max(1, ...arr.map(a => a.tot));
   $('ranking').innerHTML = arr.length ? arr.map(a =>
-    '<div class="rankitem clickable' + ($('uf').value===a.uf?' is-active':'') + '" role="button" tabindex="0" data-uf="' + esc(a.uf) + '" title="' + fmt(a.up) + ' rotas Orion maior / ' + fmt(a.down) + ' Compras maior \u2014 filtrar ' + esc(a.uf) + '">' +
+    '<div class="rankitem clickable' + (getSelectValues('uf').includes(a.uf)?' is-active':'') + '" role="button" tabindex="0" data-uf="' + esc(a.uf) + '" title="' + fmt(a.up) + ' rotas Orion maior / ' + fmt(a.down) + ' Compras maior \u2014 filtrar ' + esc(a.uf) + '">' +
     '<span class="lbl">' + esc(a.uf) + '</span>' +
     '<span class="bartrack">' +
       '<span class="barfill" data-uf-kind="up" title="Filtrar UF e Orion maior" style="width:' + (a.up / max * 100) + '%"></span>' +
@@ -959,7 +965,7 @@ function renderClients(rs){
     .sort((a,b) => b.diff - a.diff || a.conf - b.conf).slice(0, 8);
   const max = Math.max(1, ...arr.map(a => a.tot));
   $('clients').innerHTML = arr.length ? arr.map(a =>
-    '<div class="rankitem clickable' + ($('client').value===a.cli?' is-active':'') + '" role="button" tabindex="0" data-cli="' + esc(a.cli) + '" title="Conformidade: ' + a.conf.toFixed(0) + '% \u2022 filtrar">' +
+    '<div class="rankitem clickable' + (getSelectValues('client').includes(a.cli)?' is-active':'') + '" role="button" tabindex="0" data-cli="' + esc(a.cli) + '" title="Conformidade: ' + a.conf.toFixed(0) + '% \u2022 filtrar">' +
     '<span class="lbl">' + esc(a.cli) + '</span>' +
     '<span class="bartrack">' +
       '<span class="barfill good" data-client-kind="equal" style="width:' + (a.eq / max * 100) + '%" title="' + fmt(a.eq) + ' conformes — filtrar"></span>' +
@@ -1035,43 +1041,112 @@ function renderInsights(rs){
   $('insights').innerHTML = html.join('');
 }
 
+function chipLabel(prefix, values){
+  if(!values || !values.length) return '';
+  if(values.length === 1) return prefix + ': ' + values[0];
+  if(values.length <= 3) return prefix + ': ' + values.join(', ');
+  return prefix + ': ' + values.length + ' selecionados';
+}
 function renderChips(){
   const f = readFilters();
   const chips = [];
-  if(f.cliente) chips.push(['client', 'Cliente: ' + f.cliente]);
-  if(f.regiao)  chips.push(['region', 'Regi\u00e3o: ' + f.regiao]);
-  if(f.uf)      chips.push(['uf', 'UF: ' + f.uf]);
-  if(f.ponto)   chips.push(['point', 'Tipo: ' + f.ponto]);
-  if(f.orionStatus) chips.push(['orionStatus', 'STATUS ROTA: ' + f.orionStatus]);
+  if(f.cliente.length) chips.push(['client', chipLabel('Cliente', f.cliente)]);
+  if(f.regiao.length)  chips.push(['region', chipLabel('Região', f.regiao)]);
+  if(f.uf.length)      chips.push(['uf', chipLabel('UF', f.uf)]);
+  if(f.ponto.length)   chips.push(['point', chipLabel('Tipo', f.ponto)]);
+  if(f.orionStatus.length) chips.push(['orionStatus', chipLabel('STATUS ROTA', f.orionStatus)]);
   if(f.q)       chips.push(['search', 'Busca: "' + f.q + '"']);
-  if(f.sev)     chips.push(['sev', '|\u0394| \u2265 ' + f.sev + ' dias']);
+  if(f.sev)     chips.push(['sev', '|Δ| ≥ ' + f.sev + ' dias']);
   if(f.onlyDiff) chips.push(['onlyDiff', 'Somente divergentes']);
   const catLabel={equal:'TT iguais',up:'Orion maior',down:'Compras maior',missing:'Sem comparação',divergent:'Divergentes'};
   if(drill.category) chips.push(['cross:category','Interativo: ' + catLabel[drill.category]]);
   if(drill.bin !== null) chips.push(['cross:bin','Faixa Δ: ' + BINS[drill.bin].label + ' dias']);
   if(drill.route) chips.push(['cross:route','Rota: ' + drill.route.cidade + '/' + drill.route.uf]);
   $('chips').innerHTML = chips.map(([id, label]) =>
-    '<span class="chip' + (id.startsWith('cross:')?' cross':'') + '">' + esc(label) + ' <button type="button" title="Remover filtro" data-clear="' + id + '">\u2715</button></span>').join('');
+    '<span class="chip' + (id.startsWith('cross:')?' cross':'') + '">' + esc(label) + ' <button type="button" title="Remover filtro" data-clear="' + id + '">✕</button></span>').join('');
   $('chips').querySelectorAll('[data-clear]').forEach(btn => btn.addEventListener('click', () => {
     if(btn.dataset.clear.startsWith('cross:')){
       drill[btn.dataset.clear.slice(6)] = null;
     }else{
-      const el = $(btn.dataset.clear);
-      if(el.type === 'checkbox') el.checked = false; else el.value = '';
+      clearFilterControl(btn.dataset.clear);
     }
     update();
   }));
 }
 
 /* ============ selects ============ */
+const MULTI_FILTERS = new Set(['client','region','uf','point','orionStatus']);
+function getSelectValues(id){
+  const select = $(id);
+  if(!select) return [];
+  if(!MULTI_FILTERS.has(id)) return select.value ? [select.value] : [];
+  return Array.from(select.options).filter(o => o.selected && o.value !== '').map(o => o.value);
+}
+function setSelectValues(id, values=[]){
+  const select = $(id);
+  if(!select) return;
+  const allowed = new Set((values||[]).filter(Boolean));
+  if(!MULTI_FILTERS.has(id)){
+    select.value = allowed.size ? Array.from(allowed)[0] : '';
+    return;
+  }
+  let any=false;
+  Array.from(select.options).forEach(o=>{
+    if(o.value === ''){
+      o.selected = allowed.size === 0;
+    }else{
+      o.selected = allowed.has(o.value);
+      if(o.selected) any=true;
+    }
+  });
+  if(!any && select.options[0]) select.options[0].selected = true;
+}
+function toggleSelectSelection(id, value){
+  if(!MULTI_FILTERS.has(id)){
+    $(id).value = ($(id).value === value ? '' : value);
+    return;
+  }
+  const current = new Set(getSelectValues(id));
+  if(!value){
+    current.clear();
+  }else if(current.has(value)){
+    current.delete(value);
+  }else{
+    current.add(value);
+  }
+  setSelectValues(id, Array.from(current));
+}
+function clearFilterControl(id){
+  if(MULTI_FILTERS.has(id)) setSelectValues(id, []);
+  else if($(id).type === 'checkbox') $(id).checked = false;
+  else $(id).value = '';
+}
+function selectedFilterText(id, allLabel){
+  const values = getSelectValues(id);
+  if(!values.length) return allLabel;
+  if(values.length === 1) return values[0];
+  if(values.length <= 2) return values.join(' + ');
+  return values.length + ' selecionados';
+}
+function exportFilterText(id, allLabel){
+  const values = getSelectValues(id);
+  return values.length ? values.join(', ') : allLabel;
+}
 function fillSelect(id, values, all){
-  const cur = $(id).value;
-  $(id).innerHTML = '<option value="">' + all + '</option>' + values.map(v => '<option value="' + esc(v) + '">' + esc(v) + '</option>').join('');
-  if(values.includes(cur)) $(id).value = cur;
+  const oldValues = MULTI_FILTERS.has(id) ? getSelectValues(id) : (($(id).value || '') ? [$(id).value] : []);
+  const cleanValues = [...new Set(values.filter(v => String(v??'').trim() !== ''))];
+  $(id).innerHTML = '<option value="">' + all + '</option>' + cleanValues.map(v => '<option value="' + esc(v) + '">' + esc(v) + '</option>').join('');
+  if(MULTI_FILTERS.has(id)){
+    $(id).multiple = true;
+    setSelectValues(id, oldValues.filter(v => cleanValues.includes(v)));
+  }else{
+    const cur = oldValues[0] || '';
+    $(id).value = cleanValues.includes(cur) ? cur : '';
+  }
 }
 function refreshSelects(){
-  fillSelect('client', [...new Set(DATA.map(r => r.cliente))].sort((a,b) => a.localeCompare(b, 'pt-BR')), 'Todos os clientes');
-  fillSelect('region', [...new Set(DATA.map(r => r.regiao))].filter(Boolean).sort(), 'Todas as regi\u00f5es');
+  fillSelect('client', [...new Set(DATA.map(r => r.cliente))].filter(Boolean).sort((a,b) => a.localeCompare(b, 'pt-BR')), 'Todos os clientes');
+  fillSelect('region', [...new Set(DATA.map(r => r.regiao))].filter(Boolean).sort((a,b)=>a.localeCompare(b,'pt-BR')), 'Todas as regiões');
   fillSelect('uf', [...new Set(DATA.map(r => r.uf))].filter(Boolean).sort(), 'Todas as UFs');
   fillSelect('point', [...new Set(DATA.map(r => normalizeTipoOperacional(r.ponto)))].filter(Boolean).sort(), 'Todos os tipos');
   const statusOrder={'Ativo':1,'Inativo':2,'S/ INF. COMPRAS':3};
@@ -1089,10 +1164,12 @@ function closeDropdown(exceptId){
 }
 function syncDropdowns(){
   dropdowns.forEach((s,id)=>{
-    const option=s.select.options[s.select.selectedIndex];
-    s.value.textContent=option?option.textContent:'Selecione';
-    s.menu.innerHTML='';
     const opts=Array.from(s.select.options);
+    const selectedValues = MULTI_FILTERS.has(id) ? getSelectValues(id) : (s.select.value ? [s.select.value] : []);
+    const allText = opts[0] ? opts[0].textContent : 'Todos';
+    s.value.textContent = selectedFilterText(id, allText);
+    s.trigger.title = selectedValues.length ? selectedValues.join(', ') : allText;
+    s.menu.innerHTML='';
     if(opts.length>10){
       const search=document.createElement('input');
       search.className='select-search';search.type='search';search.placeholder='Buscar opção...';
@@ -1109,7 +1186,9 @@ function syncDropdowns(){
       const b=document.createElement('button');
       b.type='button';b.className='select-option';b.textContent=o.textContent;
       b.dataset.value=o.value;b.setAttribute('role','option');
-      b.setAttribute('aria-selected',o.value===s.select.value?'true':'false');
+      const selected = MULTI_FILTERS.has(id) ? (o.value==='' ? selectedValues.length===0 : selectedValues.includes(o.value)) : o.value===s.select.value;
+      b.setAttribute('aria-selected',selected?'true':'false');
+      if(MULTI_FILTERS.has(id) && o.value !== '') b.title='Clique para marcar/desmarcar';
       s.menu.appendChild(b);
     });
   });
@@ -1117,6 +1196,7 @@ function syncDropdowns(){
 function initDropdowns(){
   ['client','region','uf','point','orionStatus','sev'].forEach(id=>{
     const select=$(id),parent=select.parentElement;
+    if(MULTI_FILTERS.has(id)) select.multiple = true;
     const shell=document.createElement('div');shell.className='select-shell';
     parent.insertBefore(shell,select);shell.appendChild(select);
     select.classList.add('native-filter');select.tabIndex=-1;select.setAttribute('aria-hidden','true');
@@ -1128,6 +1208,7 @@ function initDropdowns(){
     trigger.append(value,caret);
     const menu=document.createElement('div');menu.className='select-menu';menu.id='menu-'+id;
     menu.setAttribute('role','listbox');menu.setAttribute('aria-label',parent.querySelector('label')?.textContent || 'Selecionar');
+    if(MULTI_FILTERS.has(id)) menu.setAttribute('aria-multiselectable','true');
     trigger.setAttribute('aria-controls',menu.id);
     shell.append(trigger,menu);dropdowns.set(id,{select,shell,trigger,value,menu});
     const label=parent.querySelector('label');if(label) label.htmlFor=trigger.id;
@@ -1150,7 +1231,13 @@ function initDropdowns(){
     });
     menu.addEventListener('click',e=>{
       const option=e.target.closest('.select-option');if(!option)return;
-      select.value=option.dataset.value;close(true);update();
+      if(MULTI_FILTERS.has(id)){
+        toggleSelectSelection(id, option.dataset.value);
+        syncDropdowns();
+        update();
+      }else{
+        select.value=option.dataset.value;close(true);update();
+      }
     });
     menu.addEventListener('keydown',e=>{
       const opts=[...menu.querySelectorAll('.select-option:not([hidden])')];
@@ -1161,6 +1248,9 @@ function initDropdowns(){
         const next=e.key==='Home'?0:e.key==='End'?opts.length-1:e.key==='ArrowDown'?(index+1)%opts.length:(index<1?opts.length-1:index-1);
         opts[next].focus();
       }
+      if((e.key==='Enter'||e.key===' ') && document.activeElement && document.activeElement.classList.contains('select-option')){
+        e.preventDefault();document.activeElement.click();
+      }
     });
   });
   document.addEventListener('pointerdown',e=>{
@@ -1170,7 +1260,8 @@ function initDropdowns(){
 }
 
 function resetFilters(){
-  ['client','region','uf','point','orionStatus','search','sev'].forEach(id => $(id).value = '');
+  ['client','region','uf','point','orionStatus'].forEach(id => setSelectValues(id, []));
+  ['search','sev'].forEach(id => $(id).value = '');
   $('onlyDiff').checked = false;
   drill.category=null; drill.bin=null; drill.route=null;
   update();
@@ -1220,8 +1311,9 @@ function normalizeStatusOrion(value){
   if(key.includes('inf') && key.includes('compras')) return 'S/ INF. COMPRAS';
   return raw;
 }
-const COL_REF = {C:2,G:6,K:10,N:13,O:14,P:15,W:22,X:23,AB:27};
+const COL_REF = {B:1,C:2,E:4,G:6,K:10,N:13,O:14,P:15,W:22,X:23,AB:27};
 const HEADER_MAP = {
+  id:['id','id rota','id_rota','codigo','código','cod','cod rota'],
   cliente:['razao_social','razaosocial','cliente','razao social','nome fantasia','nomefantasia'],
   uf:['uf_dest','uf','estado','uf destino','ufdest'],
   cidade:['cidade_dest','cidade','destino','cidade destino','cidadedestino','cidade_destino'],
@@ -1257,7 +1349,7 @@ function parseData(text,fileName=''){
       const cidadeCorrigida = firstText(cidadeP,get(row,ix.cidadeCorrigida),cidadeO,get(row,ix.cidade));
       const cidadeOriginal = firstText(cidadeO,get(row,ix.cidade),cidadeCorrigida);
       const tipoOperacional = firstText(normalizeTipoOperacional(get(row,ix.tipo)),normalizeTipoOperacional(get(row,COL_REF.K)),normalizeTipoOperacional(get(row,COL_REF.N)));
-      return {cliente:get(row,ix.cliente),uf:get(row,ix.uf),cidade:cidadeOriginal,cidadeCorrigida:cidadeCorrigida,orion:num(get(row,ix.orion)),compras:num(get(row,ix.compras)),ponto:tipoOperacional,regiao:get(row,ix.regiao),statusOrion:''};
+      return {id:get(row,COL_REF.B),cliente:get(row,ix.cliente),uf:get(row,ix.uf),cidade:cidadeOriginal,cidadeCorrigida:cidadeCorrigida,orion:num(get(row,ix.orion)),compras:num(get(row,ix.compras)),ponto:tipoOperacional,regiao:get(row,ix.regiao),statusOrion:''};
     })};
   }
   if(useOrionWX){
@@ -1268,6 +1360,7 @@ function parseData(text,fileName=''){
       const ufFromX=/^[A-Za-z]{2}$/.test(refX)?refX.toUpperCase():'';
       const statusRota=normalizeStatusOrion(get(row,COL_REF.C));
       return {
+        id:get(row,COL_REF.E),
         cliente:ix.cliente>=0?get(row,ix.cliente):'',
         uf:firstText(ufHeader,ufFromX),
         cidade:firstText(get(row,COL_REF.W),get(row,ix.cidade)),
@@ -1278,7 +1371,7 @@ function parseData(text,fileName=''){
         compras:num(get(row,COL_REF.G)),
         orion:num(get(row,COL_REF.AB))
       };
-    }).filter(row=>row.cidade && (row.statusOrion || row.orion!==null || row.compras!==null));
+    }).filter(row=>(row.id || row.cidade) && (row.statusOrion || row.orion!==null || row.compras!==null));
     return {kind:'orion',meta:{orionWX:true,statusHeader:headC,statusColumn:'C',comprasColumn:'G',orionColumn:'AB',cityColumn:'W',regionColumn:'X'},rows};
   }
   if(hasClients){
@@ -1297,13 +1390,14 @@ function parseData(text,fileName=''){
   for(const key in HEADER_MAP) idx[key]=index(...HEADER_MAP[key]);
   if(idx.cliente<0||idx.uf<0) return null;
   const ixStatus=index('Status','STATUS','Status Orion','Status Rota','STATUS ROTA','STATUS ROT','Status Rot','Status da Rota','Situa\u00e7\u00e3o','Situacao');
-  const out=data.map(row=>normalize({cliente:get(row,idx.cliente),uf:get(row,idx.uf),cidade:get(row,idx.cidade),orion:get(row,idx.orion),compras:get(row,idx.compras),ponto:normalizeTipoOperacional(get(row,idx.ponto)),regiao:get(row,idx.regiao),statusOrion:get(row,ixStatus)}));
+  const out=data.map(row=>normalize({id:get(row,idx.id),cliente:get(row,idx.cliente),uf:get(row,idx.uf),cidade:get(row,idx.cidade),orion:get(row,idx.orion),compras:get(row,idx.compras),ponto:normalizeTipoOperacional(get(row,idx.ponto)),regiao:get(row,idx.regiao),statusOrion:get(row,ixStatus)}));
   return out.length?{kind:'combined',rows:out}:null;
 }
 function mergeSupportRows(current,row){
   if(!current) return {...row};
   return {
     ...current,
+    id:current.id || row.id || '',
     cliente:current.cliente || row.cliente || '',
     uf:current.uf || row.uf || '',
     cidade:current.cidade || row.cidade || '',
@@ -1322,6 +1416,11 @@ function mergeOrionRows(current,row){
   }
   return mergeSupportRows(current,row);
 }
+function normalizeBrazilRegion(value){
+  const key=String(value||'').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Z0-9]/g,'');
+  const map={NORTE:'NORTE',NORDESTE:'NORDESTE',SUL:'SUL',SUDESTE:'SUDESTE',CENTROOESTE:'CENTRO-OESTE',CENTRO:'CENTRO-OESTE'};
+  return map[key]||'';
+}
 function brazilRegionFromUF(uf){
   const u=String(uf||'').trim().toUpperCase();
   const map={AC:'NORTE',AP:'NORTE',AM:'NORTE',PA:'NORTE',RO:'NORTE',RR:'NORTE',TO:'NORTE',
@@ -1337,14 +1436,15 @@ function regionVariants(row){
 }
 function combineSources(carrierRows,clientRows=[],orionRows=[]){
   const clientIndex=new Map(), clientCityIndex=new Map(), clientCityOnlyIndex=new Map();
-  const statusClientCityRegionIndex=new Map(), statusClientCityIndex=new Map();
+  const orionIdIndex=new Map(), statusClientCityRegionIndex=new Map(), statusClientCityIndex=new Map();
   const statusCityUfIndex=new Map(), statusCityRegionIndex=new Map(), statusCityOnlyIndex=new Map();
   const chooseSupport=(map,key,row)=>{
     if(!key || key.replace(/\|/g,'')==='') return;
     map.set(key,mergeSupportRows(map.get(key),row));
   };
-  const chooseStatus=(map,key,row)=>{
-    if(!key || key.replace(/\|/g,'')==='' || !row.statusOrion) return;
+  const chooseOrion=(map,key,row)=>{
+    if(!key || key.replace(/\|/g,'')==='') return;
+    if(!(row.statusOrion || row.orion!==null || row.compras!==null)) return;
     map.set(key,mergeOrionRows(map.get(key),row));
   };
   clientRows.forEach(row=>{
@@ -1354,55 +1454,62 @@ function combineSources(carrierRows,clientRows=[],orionRows=[]){
     chooseSupport(clientCityOnlyIndex,joinKey(row.cidade),row);
   });
   orionRows.forEach(row=>{
-    if(!row || !row.cidade || !row.statusOrion) return;
+    if(!row) return;
+    if(row.id) chooseOrion(orionIdIndex,joinKey(row.id),row);
+    if(!row.cidade) return;
     const regions=regionVariants(row);
     regions.forEach(reg=>{
-      chooseStatus(statusClientCityRegionIndex,joinKey(row.cliente,row.cidade,reg),row);
-      chooseStatus(statusCityRegionIndex,joinKey(row.cidade,reg),row);
+      chooseOrion(statusClientCityRegionIndex,joinKey(row.cliente,row.cidade,reg),row);
+      chooseOrion(statusCityRegionIndex,joinKey(row.cidade,reg),row);
     });
-    chooseStatus(statusClientCityIndex,joinKey(row.cliente,row.cidade),row);
-    if(row.uf) chooseStatus(statusCityUfIndex,joinKey(row.cidade,row.uf),row);
-    chooseStatus(statusCityOnlyIndex,joinKey(row.cidade),row);
+    chooseOrion(statusClientCityIndex,joinKey(row.cliente,row.cidade),row);
+    if(row.uf) chooseOrion(statusCityUfIndex,joinKey(row.cidade,row.uf),row);
+    chooseOrion(statusCityOnlyIndex,joinKey(row.cidade),row);
   });
   return carrierRows.map(row=>{
     const canonical=firstText(row.cidadeCorrigida,row.cidade);
     const comprasMatch=clientIndex.get(joinKey(row.cliente,row.uf,canonical)) || clientCityIndex.get(joinKey(row.cliente,canonical)) || clientCityOnlyIndex.get(joinKey(canonical));
-    const carrierRegions=regionVariants(row);
-    let statusMatch=null;
-    for(const reg of carrierRegions){
-      statusMatch=statusClientCityRegionIndex.get(joinKey(row.cliente,canonical,reg));
-      if(statusMatch&&statusMatch.statusOrion) break;
-      statusMatch=null;
-    }
-    statusMatch=statusMatch || statusClientCityIndex.get(joinKey(row.cliente,canonical));
-    if(!(statusMatch&&statusMatch.statusOrion)){
-      statusMatch=null;
+    let statusMatch = row.id ? orionIdIndex.get(joinKey(row.id)) : null;
+    if(!statusMatch){
+      const carrierRegions=regionVariants(row);
       for(const reg of carrierRegions){
-        statusMatch=statusCityRegionIndex.get(joinKey(canonical,reg));
-        if(statusMatch&&statusMatch.statusOrion) break;
+        statusMatch=statusClientCityRegionIndex.get(joinKey(row.cliente,canonical,reg));
+        if(statusMatch) break;
         statusMatch=null;
       }
+      statusMatch=statusMatch || statusClientCityIndex.get(joinKey(row.cliente,canonical));
+      if(!statusMatch){
+        statusMatch=null;
+        for(const reg of carrierRegions){
+          statusMatch=statusCityRegionIndex.get(joinKey(canonical,reg));
+          if(statusMatch) break;
+          statusMatch=null;
+        }
+      }
+      statusMatch=statusMatch || statusCityUfIndex.get(joinKey(canonical,row.uf)) || statusCityOnlyIndex.get(joinKey(canonical));
     }
-    statusMatch=statusMatch || statusCityUfIndex.get(joinKey(canonical,row.uf)) || statusCityOnlyIndex.get(joinKey(canonical));
-    const orionSource=(statusMatch&&statusMatch.statusOrion)?statusMatch:null;
+    const orionSource=statusMatch||null;
+    const finalUf=row.uf || (orionSource&&orionSource.uf) || '';
     return normalize({
+      id:row.id || (orionSource&&orionSource.id) || '',
       cliente:row.cliente || (orionSource&&orionSource.cliente) || '',
-      uf:row.uf || (orionSource&&orionSource.uf) || '',
-      cidade:canonical,
+      uf:finalUf,
+      cidade:canonical || (orionSource&&orionSource.cidade) || '',
       orion:(orionSource&&orionSource.orion!==null&&orionSource.orion!==undefined)?orionSource.orion:row.orion,
       compras:(orionSource&&orionSource.compras!==null&&orionSource.compras!==undefined)?orionSource.compras:(row.compras??(comprasMatch?comprasMatch.compras:null)),
       ponto:row.ponto || (orionSource&&orionSource.ponto) || '',
-      regiao:(orionSource&&orionSource.regiao)||(comprasMatch&&comprasMatch.regiao)||row.regiao,
+      regiao:brazilRegionFromUF(finalUf) || normalizeBrazilRegion(row.regiao) || normalizeBrazilRegion(orionSource&&orionSource.regiao) || normalizeBrazilRegion(comprasMatch&&comprasMatch.regiao) || '',
       statusOrion:(orionSource&&orionSource.statusOrion)||row.statusOrion
     });
   });
 }
 function buildCarrierSupport(carrierRows=[]){
-  const maps={clientUfCity:new Map(),clientCity:new Map(),cityUf:new Map(),cityOnly:new Map()};
+  const maps={id:new Map(),clientUfCity:new Map(),clientCity:new Map(),cityUf:new Map(),cityOnly:new Map()};
   const add=(map,key,row)=>{if(key&&key.replace(/\|/g,'')!==''&&!map.has(key))map.set(key,row);};
   carrierRows.forEach(row=>{
     const canonical=firstText(row.cidadeCorrigida,row.cidade);
     const ref={...row,cidade:canonical};
+    if(row.id) add(maps.id,joinKey(row.id),ref);
     add(maps.clientUfCity,joinKey(row.cliente,row.uf,canonical),ref);
     add(maps.clientCity,joinKey(row.cliente,canonical),ref);
     add(maps.cityUf,joinKey(canonical,row.uf),ref);
@@ -1411,16 +1518,20 @@ function buildCarrierSupport(carrierRows=[]){
   return maps;
 }
 function enrichOrionBase(orionRows=[],carrierRows=[]){
-  if(!carrierRows||!carrierRows.length) return orionRows.map(row=>({...row,cidadeCorrigida:row.cidade}));
+  if(!carrierRows||!carrierRows.length) return orionRows.map(row=>({...row,cidadeCorrigida:row.cidade,regiao:brazilRegionFromUF(row.uf)||normalizeBrazilRegion(row.regiao)||row.regiao}));
   const maps=buildCarrierSupport(carrierRows);
   return orionRows.map(row=>{
-    const match=maps.clientUfCity.get(joinKey(row.cliente,row.uf,row.cidade)) || maps.clientCity.get(joinKey(row.cliente,row.cidade)) || maps.cityUf.get(joinKey(row.cidade,row.uf)) || maps.cityOnly.get(joinKey(row.cidade));
+    const match=(row.id?maps.id.get(joinKey(row.id)):null) || maps.clientUfCity.get(joinKey(row.cliente,row.uf,row.cidade)) || maps.clientCity.get(joinKey(row.cliente,row.cidade)) || maps.cityUf.get(joinKey(row.cidade,row.uf)) || maps.cityOnly.get(joinKey(row.cidade));
+    const finalUf=row.uf || (match&&match.uf) || '';
     return {
       ...row,
+      id:row.id || (match&&match.id) || '',
       cliente:row.cliente || (match&&match.cliente) || '',
-      uf:row.uf || (match&&match.uf) || '',
+      uf:finalUf,
+      cidade:row.cidade || (match&&match.cidade) || '',
       ponto:row.ponto || (match&&match.ponto) || '',
-      cidadeCorrigida:row.cidade
+      regiao:brazilRegionFromUF(finalUf) || normalizeBrazilRegion(row.regiao) || normalizeBrazilRegion(match&&match.regiao) || '',
+      cidadeCorrigida:row.cidade || (match&&match.cidadeCorrigida) || (match&&match.cidade) || ''
     };
   });
 }
@@ -1591,7 +1702,7 @@ function exportExcel(onlyPending=true){
     ['CEVA LOGISTICS | RELATÓRIO DE TRANSIT TIME',''],
     ['Tipo de exportação',onlyPending?'Pendências para tratamento':'Todas as rotas filtradas'],
     ['Gerado em',new Date().toLocaleString('pt-BR')],
-    ['RAZÃO SOCIAL (CLIENTE)',f.cliente||'Todos'],
+    ['RAZÃO SOCIAL (CLIENTE)',exportFilterText('client','Todos')],
     ['Regi\u00e3o',f.regiao||'Todas'],['UF',f.uf||'Todas'],['Tipo operacional',f.ponto||'Todos'],['Status Orion',f.orionStatus||'Todos'],
     ['Severidade mínima (dias)',f.sev||'Todas'],['Somente divergentes',f.onlyDiff?'Sim':'Não'],
     ['Filtro de categoria',drill.category||'Todos'],['Faixa de diferença',drill.bin===null?'Todas':BINS[drill.bin].label],
