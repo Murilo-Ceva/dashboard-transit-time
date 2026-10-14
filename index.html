@@ -451,7 +451,7 @@ tbody tr.row-selected td{background:rgba(225,38,28,.2);border-top:1px solid #E12
       <div class="mastcopy">
         <div class="eyebrow">Control Tower</div>
         <h1>Transit Time Intelligence</h1>
-        <div class="sub">Comparativo Orion &#215; Compras &#8226; clique nos indicadores, gr&#225;ficos e rotas para cruzar os filtros</div>
+        <div class="sub">Comparativo Orion &#215; Compras &#8226; carrega CSVs do GitHub e permite filtro cruzado</div>
       </div>
       <div class="actions">
         <button class="btn" onclick="openEdit()">&#9998; Editar dados</button>
@@ -1555,51 +1555,101 @@ async function readLocalText(file){
   try{return new TextDecoder('utf-8',{fatal:true}).decode(bytes);}
   catch{return new TextDecoder('windows-1252').decode(bytes);}
 }
+function applyParsedItems(parsed, sourceLabel){
+  if(parsed.some(item=>!item.data)) throw new Error('Não reconheci o formato de um dos arquivos.');
+  const combined=parsed.filter(item=>item.data.kind==='combined');
+  const carriers=parsed.filter(item=>item.data.kind==='carrier');
+  const clients=parsed.filter(item=>item.data.kind==='clients');
+  const orions=parsed.filter(item=>item.data.kind==='orion');
+  let arr;
+  if(combined.length===1 && parsed.length===1){
+    ORION_STATUS_OPTIONS=[...new Set(combined[0].data.rows.map(r=>normalizeStatusOrion(r.statusOrion)).filter(Boolean))];
+    arr=combined[0].data.rows;
+    SOURCE_CACHE.carrier=null;SOURCE_CACHE.clients=[];SOURCE_CACHE.orion=[];
+  }else{
+    if(carriers.length) SOURCE_CACHE.carrier=carriers[carriers.length-1].data.rows;
+    if(clients.length) SOURCE_CACHE.clients=clients.flatMap(item=>item.data.rows||[]);
+    if(orions.length) SOURCE_CACHE.orion=orions.flatMap(item=>item.data.rows||[]);
+    ORION_STATUS_OPTIONS=[...new Set(SOURCE_CACHE.orion.map(r=>normalizeStatusOrion(r.statusOrion)).filter(Boolean))];
+    const baseCarrier=SOURCE_CACHE.carrier || DATA.map(r=>({...r,cidadeCorrigida:r.cidade}));
+    const orionHasCalc=SOURCE_CACHE.orion.some(r=>r.orion!==null || r.compras!==null);
+    if(SOURCE_CACHE.orion.length && orionHasCalc){
+      const baseOrion=enrichOrionBase(SOURCE_CACHE.orion,baseCarrier);
+      arr=combineSources(baseOrion,SOURCE_CACHE.clients,SOURCE_CACHE.orion);
+    }else{
+      if(!baseCarrier.length) throw new Error('Importe a Base Transportadora antes ou junto com as demais bases.');
+      arr=combineSources(baseCarrier,SOURCE_CACHE.clients,SOURCE_CACHE.orion);
+    }
+  }
+  applyData(arr);
+  const importNotes=[];
+  if(carriers.some(item=>item.data.meta&&item.data.meta.carrierOP)) importNotes.push('Cópia de Apoio Transportadorav2: cidade oficial por colunas O/P.');
+  if(orions.length || SOURCE_CACHE.orion.length){
+    const sourceRows=SOURCE_CACHE.orion.length?SOURCE_CACHE.orion:orions.flatMap(item=>item.data.rows||[]);
+    const sourceCounts=sourceRows.reduce((a,r)=>{if(r.statusOrion)a[r.statusOrion]=(a[r.statusOrion]||0)+1;return a;},{});
+    const counts=arr.reduce((a,r)=>{if(r.statusOrion)a[r.statusOrion]=(a[r.statusOrion]||0)+1;return a;},{});
+    const matched=Object.values(counts).reduce((sum,n)=>sum+n,0);
+    importNotes.push('Base Orion Ativa: C = STATUS ROTA; G = Transit Time COMPRAS; W = cidade; X = região/UF; AB = TRANS_TIME_DIA/ORION.');
+    importNotes.push('STATUS ROTA lidos na origem: '+sourceRows.length + (sourceRows.length?': '+Object.entries(sourceCounts).map(([k,v])=>k+' '+v).join(' | '):'.'));
+    importNotes.push('STATUS ROTA relacionados ao painel: '+matched+' de '+arr.length+' rotas' + (matched?': '+Object.entries(counts).map(([k,v])=>k+' '+v).join(' | '):'.'));
+  }
+  return {
+    arr,
+    loadedNames: parsed.map(item=>item.name).filter(Boolean),
+    message: arr.length + ' rotas importadas. Diferença calculada como Orion − Compras (na Base Orion Ativa: AB − G).' + (importNotes.length ? '\n' + importNotes.join('\n') : '')
+  };
+}
 async function readCSV(ev){
   const files=Array.from(ev.target.files||[]);
   if(!files.length) return;
   try{
     const parsed=await Promise.all(files.map(async file=>({name:file.name,data:parseData(await readLocalText(file),file.name)})));
-    if(parsed.some(item=>!item.data)) throw new Error('Não reconheci o formato de um dos arquivos.');
-    const combined=parsed.filter(item=>item.data.kind==='combined');
-    const carriers=parsed.filter(item=>item.data.kind==='carrier');
-    const clients=parsed.filter(item=>item.data.kind==='clients');
-    const orions=parsed.filter(item=>item.data.kind==='orion');
-    let arr;
-    if(combined.length===1 && parsed.length===1){
-      ORION_STATUS_OPTIONS=[...new Set(combined[0].data.rows.map(r=>normalizeStatusOrion(r.statusOrion)).filter(Boolean))];
-      arr=combined[0].data.rows;
-      SOURCE_CACHE.carrier=null;SOURCE_CACHE.clients=[];SOURCE_CACHE.orion=[];
-    }else{
-      if(carriers.length) SOURCE_CACHE.carrier=carriers[carriers.length-1].data.rows;
-      if(clients.length) SOURCE_CACHE.clients=clients.flatMap(item=>item.data.rows||[]);
-      if(orions.length) SOURCE_CACHE.orion=orions.flatMap(item=>item.data.rows||[]);
-      ORION_STATUS_OPTIONS=[...new Set(SOURCE_CACHE.orion.map(r=>normalizeStatusOrion(r.statusOrion)).filter(Boolean))];
-      const baseCarrier=SOURCE_CACHE.carrier || DATA.map(r=>({...r,cidadeCorrigida:r.cidade}));
-      const orionHasCalc=SOURCE_CACHE.orion.some(r=>r.orion!==null || r.compras!==null);
-      if(SOURCE_CACHE.orion.length && orionHasCalc){
-        const baseOrion=enrichOrionBase(SOURCE_CACHE.orion,baseCarrier);
-        arr=combineSources(baseOrion,SOURCE_CACHE.clients,SOURCE_CACHE.orion);
-      }else{
-        if(!baseCarrier.length) throw new Error('Importe a Base Transportadora antes ou junto com as demais bases.');
-        arr=combineSources(baseCarrier,SOURCE_CACHE.clients,SOURCE_CACHE.orion);
-      }
-    }
-    applyData(arr);
-    const importNotes=[];
-    if(carriers.some(item=>item.data.meta&&item.data.meta.carrierOP)) importNotes.push('Cópia de Apoio Transportadorav2: cidade oficial por colunas O/P.');
-    if(orions.length || SOURCE_CACHE.orion.length){
-      const sourceRows=SOURCE_CACHE.orion.length?SOURCE_CACHE.orion:orions.flatMap(item=>item.data.rows||[]);
-      const sourceCounts=sourceRows.reduce((a,r)=>{if(r.statusOrion)a[r.statusOrion]=(a[r.statusOrion]||0)+1;return a;},{});
-      const counts=arr.reduce((a,r)=>{if(r.statusOrion)a[r.statusOrion]=(a[r.statusOrion]||0)+1;return a;},{});
-      const matched=Object.values(counts).reduce((sum,n)=>sum+n,0);
-      importNotes.push('Base Orion Ativa: C = STATUS ROTA; G = Transit Time COMPRAS; W = cidade; X = região/UF; AB = TRANS_TIME_DIA/ORION.');
-      importNotes.push('STATUS ROTA lidos na origem: '+sourceRows.length + (sourceRows.length?': '+Object.entries(sourceCounts).map(([k,v])=>k+' '+v).join(' | '):'.'));
-      importNotes.push('STATUS ROTA relacionados ao painel: '+matched+' de '+arr.length+' rotas' + (matched?': '+Object.entries(counts).map(([k,v])=>k+' '+v).join(' | '):'.'));
-    }
-    alert(arr.length + ' rotas importadas. Diferença calculada como Orion − Compras (na Base Orion Ativa: AB − G).' + (importNotes.length ? '\n' + importNotes.join('\n') : ''));
+    const result=applyParsedItems(parsed,'arquivos locais');
+    alert(result.message);
   }catch(error){alert(error.message||'Não foi possível interpretar os arquivos selecionados.');}
   ev.target.value='';
+}
+const GITHUB_AUTO_BASE_FILES=[
+  'Cópia de Apoio Transportadorav2.csv',
+  'Cópia de Apoio Clientesv2 1.csv',
+  '01_Base_Transportadora.csv',
+  '02_Base_Orion_Ativa.csv',
+  '01_Base_Transportadora_modelo.csv',
+  '02_Base_Orion_Ativa_modelo.csv'
+];
+async function fetchGithubBaseText(path){
+  const url=new URL(encodeURI(path), window.location.href);
+  const res=await fetch(url.href,{cache:'no-store'});
+  if(!res.ok) throw new Error(path+' não encontrado no GitHub Pages.');
+  const bytes=new Uint8Array(await res.arrayBuffer());
+  if(bytes[0]===0xEF&&bytes[1]===0xBB&&bytes[2]===0xBF) return new TextDecoder('utf-8').decode(bytes);
+  try{return new TextDecoder('utf-8',{fatal:true}).decode(bytes);}
+  catch{return new TextDecoder('windows-1252').decode(bytes);}
+}
+async function autoLoadGithubBases(){
+  if(!/github\.io$/i.test(location.hostname)) return;
+  const loaded=[];
+  for(const name of GITHUB_AUTO_BASE_FILES){
+    try{
+      const text=await fetchGithubBaseText(name);
+      const data=parseData(text,name);
+      if(data) loaded.push({name,data});
+    }catch(error){
+      console.info('[CEVA] Base não carregada automaticamente:', name, error.message||error);
+    }
+  }
+  if(!loaded.length){
+    $('counter').textContent='Nenhuma base CSV automática encontrada no GitHub. Use Importar bases.';
+    return;
+  }
+  try{
+    const result=applyParsedItems(loaded,'GitHub');
+    $('counter').textContent=fmt(DATA.length)+' registros carregados do GitHub • '+result.loadedNames.join(' + ');
+    console.info('[CEVA] Bases carregadas automaticamente do GitHub:', result.loadedNames);
+  }catch(error){
+    console.warn('[CEVA] Falha ao aplicar bases automáticas:', error);
+    $('counter').textContent='Bases CSV encontradas, mas não reconhecidas. Use Importar bases para validar.';
+  }
 }
 function exportFiltered(){
   const rs = rows();
@@ -1757,6 +1807,7 @@ function init(){
   $('modal').addEventListener('click', e => { if(e.target === $('modal')) closeEdit(); });
   sortKey = 'abs'; sortDir = -1;
   update();
+  autoLoadGithubBases();
 }
 init();
 </script>
