@@ -1808,6 +1808,7 @@ function closeEdit(){ $('modal').classList.remove('open'); }
 
 
 const BRAND_INTRO_SEEN_KEY='cevaTransitTimeBrandIntroSeenVideo';
+const BRAND_INTRO_SHORTEN_SECONDS=2;
 function finishBrandIntro(){
   const overlay=$('brandIntro'),video=$('brandIntroVideo'),dashboard=document.querySelector('.screen');
   if(!overlay||overlay.dataset.finished==='true')return;
@@ -1832,6 +1833,10 @@ function initBrandIntro(){
   document.body.classList.add('intro-playing');
   skip.addEventListener('click',finishBrandIntro,{once:true});
   video.addEventListener('ended',finishBrandIntro,{once:true});
+  video.addEventListener('timeupdate',()=>{
+    const cutoff=video.duration-BRAND_INTRO_SHORTEN_SECONDS;
+    if(Number.isFinite(video.duration)&&cutoff>0&&video.currentTime>=cutoff)finishBrandIntro();
+  });
   video.addEventListener('error',finishBrandIntro,{once:true});
   if(audio)audio.addEventListener('click',()=>{
     video.muted=!video.muted;
