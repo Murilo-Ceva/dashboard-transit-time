@@ -442,33 +442,19 @@ tbody tr.row-selected td{background:rgba(225,38,28,.2);border-top:1px solid #E12
 
 /* ---------- abertura da marca ---------- */
 body.intro-playing{overflow:hidden}
-.brand-intro{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;overflow:hidden;isolation:isolate;
-  background:radial-gradient(ellipse 70% 58% at 50% 46%,rgba(29,66,137,.46),transparent 76%),linear-gradient(135deg,#021D49 0%,#092B63 52%,#041E48 100%);
-  opacity:1;visibility:visible;transition:opacity .42s ease,visibility .42s ease}
+.brand-intro{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;background:var(--primary);opacity:1;visibility:visible;transition:opacity .42s ease,visibility .42s ease}
 .brand-intro[hidden]{display:none!important}
 .brand-intro.is-exiting{opacity:0;visibility:hidden;pointer-events:none}
-.brand-intro::before{content:"";position:absolute;left:50%;top:50%;width:min(88vw,1040px);aspect-ratio:1;border-radius:50%;
-  background:radial-gradient(circle,rgba(64,126,201,.30) 0%,rgba(29,66,137,.16) 38%,transparent 72%);
-  opacity:.72;transform:translate(-50%,-50%);animation:brand-intro-aura 5.8s ease-in-out infinite alternate}
-.brand-intro-stage{position:relative;z-index:1;display:grid;place-items:center;width:100%;height:100%;padding:24px}
-.brand-intro-logo{display:block;width:min(75vw,725px);max-height:34vh;height:auto;object-fit:contain;
-  opacity:0;transform:translateY(10px) scale(.985);filter:drop-shadow(0 12px 34px rgba(108,172,228,.14));
-  animation:brand-intro-logo-in .9s cubic-bezier(.2,.75,.25,1) .12s both}
-.brand-intro-video{position:absolute;left:0;bottom:0;display:block;width:1px;height:1px;opacity:0;pointer-events:none}
-.brand-intro-actions{position:absolute;z-index:2;top:18px;right:18px;display:flex;align-items:center;gap:8px}
+.brand-intro-video{display:block;width:100%;height:100%;object-fit:contain;background:var(--primary)}
+.brand-intro-actions{position:absolute;top:18px;right:18px;display:flex;align-items:center;gap:8px}
 .brand-intro-actions .btn{box-shadow:0 10px 24px rgba(0,0,0,.28)}
-@keyframes brand-intro-logo-in{to{opacity:1;transform:translateY(0) scale(1)}}
-@keyframes brand-intro-aura{to{opacity:.94;transform:translate(-50%,-50%) scale(1.06)}}
 @media(max-width:560px){.brand-intro-actions{top:12px;right:12px;gap:6px}.brand-intro-actions .btn{padding:9px 11px;font-size:11px}}
-@media(prefers-reduced-motion:reduce){.brand-intro,.brand-intro::before{transition:none;animation:none}.brand-intro-logo{animation:none;opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.brand-intro{transition:none}}
 </style>
 </head>
 <body>
 <div id="brandIntro" class="brand-intro" role="region" aria-label="Apresentação da marca CEVA">
-  <div class="brand-intro-stage" aria-hidden="true">
-    <img id="brandIntroLogo" alt="" decoding="async">
-  </div>
-  <video id="brandIntroVideo" class="brand-intro-video" muted playsinline preload="auto" aria-hidden="true" tabindex="-1">
+  <video id="brandIntroVideo" class="brand-intro-video" muted playsinline preload="auto" aria-label="Vídeo de abertura do Transit Time">
     <source src="assets/transit-time-intro.mp4" type="video/mp4">
   </video>
   <div class="brand-intro-actions">
@@ -1821,7 +1807,7 @@ function openEdit(){ $('feedback').textContent = ''; $('modal').classList.add('o
 function closeEdit(){ $('modal').classList.remove('open'); }
 
 
-const BRAND_INTRO_SEEN_KEY='cevaTransitTimeBrandIntroSeen';
+const BRAND_INTRO_SEEN_KEY='cevaTransitTimeBrandIntroSeenVideo';
 function finishBrandIntro(){
   const overlay=$('brandIntro'),video=$('brandIntroVideo'),dashboard=document.querySelector('.screen');
   if(!overlay||overlay.dataset.finished==='true')return;
@@ -1859,7 +1845,6 @@ function initBrandIntro(){
 
 /* ============ init ============ */
 function init(){
-  $('brandIntroLogo').src = IM.logo;
   initBrandIntro();
   $('logo').src = IM.logo;
   $('cover').style.backgroundImage = "url('" + IM.cover + "')";
