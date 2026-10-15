@@ -439,9 +439,29 @@ tbody tr.row-selected td{background:rgba(225,38,28,.2);border-top:1px solid #E12
    Ele deixa de usar TSP, transportadora, cidade ou colunas auxiliares como fallback visual.
 */
 
+
+/* ---------- abertura da marca ---------- */
+body.intro-playing{overflow:hidden}
+.brand-intro{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;background:var(--primary);opacity:1;visibility:visible;transition:opacity .42s ease,visibility .42s ease}
+.brand-intro[hidden]{display:none!important}
+.brand-intro.is-exiting{opacity:0;visibility:hidden;pointer-events:none}
+.brand-intro-video{display:block;width:100%;height:100%;object-fit:contain;background:var(--primary)}
+.brand-intro-actions{position:absolute;top:18px;right:18px;display:flex;align-items:center;gap:8px}
+.brand-intro-actions .btn{box-shadow:0 10px 24px rgba(0,0,0,.28)}
+@media(max-width:560px){.brand-intro-actions{top:12px;right:12px;gap:6px}.brand-intro-actions .btn{padding:9px 11px;font-size:11px}}
+@media(prefers-reduced-motion:reduce){.brand-intro{transition:none}}
 </style>
 </head>
 <body>
+<div id="brandIntro" class="brand-intro" role="region" aria-label="Apresentação da marca CEVA">
+  <video id="brandIntroVideo" class="brand-intro-video" muted playsinline preload="auto" aria-label="Vídeo de abertura do Transit Time">
+    <source src="assets/transit-time-intro.mp4" type="video/mp4">
+  </video>
+  <div class="brand-intro-actions">
+    <button class="btn" id="brandIntroAudio" type="button" aria-pressed="false">Ativar som</button>
+    <button class="btn red" id="skipPresentation" type="button">Pular apresentação</button>
+  </div>
+</div>
 <div class="screen">
   <div class="cover" id="cover"></div>
   <div class="shell">
@@ -1786,8 +1806,46 @@ function exportExcel(onlyPending=true){
 function openEdit(){ $('feedback').textContent = ''; $('modal').classList.add('open'); $('paste').focus(); }
 function closeEdit(){ $('modal').classList.remove('open'); }
 
+
+const BRAND_INTRO_SEEN_KEY='cevaTransitTimeBrandIntroSeen';
+function finishBrandIntro(){
+  const overlay=$('brandIntro'),video=$('brandIntroVideo'),dashboard=document.querySelector('.screen');
+  if(!overlay||overlay.dataset.finished==='true')return;
+  overlay.dataset.finished='true';
+  try{sessionStorage.setItem(BRAND_INTRO_SEEN_KEY,'1')}catch(_){ }
+  document.body.classList.remove('intro-playing');
+  if(dashboard){dashboard.inert=false;dashboard.removeAttribute('aria-hidden')}
+  overlay.classList.add('is-exiting');
+  if(video)video.pause();
+  const heading=document.querySelector('.mast h1');
+  if(heading){heading.setAttribute('tabindex','-1');heading.focus({preventScroll:true})}
+  window.setTimeout(()=>{overlay.hidden=true},450);
+}
+function initBrandIntro(){
+  const overlay=$('brandIntro'),video=$('brandIntroVideo'),skip=$('skipPresentation'),audio=$('brandIntroAudio');
+  if(!overlay||!video||!skip)return;
+  let seen=false;
+  try{seen=sessionStorage.getItem(BRAND_INTRO_SEEN_KEY)==='1'}catch(_){ }
+  if(seen){overlay.hidden=true;return}
+  const dashboard=document.querySelector('.screen');
+  if(dashboard){dashboard.inert=true;dashboard.setAttribute('aria-hidden','true')}
+  document.body.classList.add('intro-playing');
+  skip.addEventListener('click',finishBrandIntro,{once:true});
+  video.addEventListener('ended',finishBrandIntro,{once:true});
+  video.addEventListener('error',finishBrandIntro,{once:true});
+  if(audio)audio.addEventListener('click',()=>{
+    video.muted=!video.muted;
+    audio.setAttribute('aria-pressed',String(!video.muted));
+    audio.textContent=video.muted?'Ativar som':'Silenciar';
+  });
+  skip.focus({preventScroll:true});
+  const playback=video.play();
+  if(playback&&typeof playback.catch==='function')playback.catch(finishBrandIntro);
+}
+
 /* ============ init ============ */
 function init(){
+  initBrandIntro();
   $('logo').src = IM.logo;
   $('cover').style.backgroundImage = "url('" + IM.cover + "')";
   refreshSelects();
