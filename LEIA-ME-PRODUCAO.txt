@@ -1,0 +1,9 @@
+CEVA Transit Time | Atualização 16/10/2026
+
+1. Faça backup do repositório antes de publicar.
+2. Extraia este ZIP; envie todo o conteúdo INTERNO da pasta para a RAIZ do repositório (substituindo index.html e Cópia de Apoio Clientesv2 1.csv e preservando assets/).
+3. O GitHub Pages deve apontar para a branch main / (root).
+4. Abra o site e atualize com Ctrl+F5. Confira um ID conhecido e os T1, T2 e TT TOTAL.
+5. Mapeamento NOVO CSV: G=T1; H=T2; I=TT TOTAL para o comparativo; L=Transit Time COMPRAS (não usada no comparativo); AG=TRANS_TIME_DIA Orion.
+6. T1/T2 mostrados em colunas na tabela de rotas e em resumo por média das linhas filtradas; TT TOTAL não é recalculado.
+7. Uso com GitHub Pages é de leitura; alterações locais via Importar bases não publicam automaticamente no GitHub. Para atualizar o site publique o novo CSV no repositório.
