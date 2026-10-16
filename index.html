@@ -476,7 +476,7 @@ tbody tr.row-selected td{background:rgba(225,38,28,.2);border-top:1px solid #E12
       </div>
       <div class="actions">
         <button class="btn" onclick="openEdit()">&#9998; Editar dados</button>
-        <button class="btn" title="Selecione Apoio Transportadora e Apoio Clientes juntos para atualizar a comparação" onclick="document.getElementById('upload').click()">&#8593; Importar bases</button>
+        <button class="btn" title="Selecione Apoio Transportadora e Apoio Clientes juntos. Compras usa TT TOTAL (coluna I) da base Apoio Clientes." onclick="document.getElementById('upload').click()">&#8593; Importar bases</button>
         <button class="btn red" onclick="exportFiltered()">&#8595; CSV da vis&#227;o</button>
         <input id="upload" type="file" accept=".csv,.tsv,.txt" multiple hidden onchange="readCSV(event)">
       </div>
@@ -557,7 +557,7 @@ tbody tr.row-selected td{background:rgba(225,38,28,.2);border-top:1px solid #E12
             <div class="legend-row" data-category="missing" role="button" tabindex="0" title="Clique para filtrar nos demais painéis"><span><i class="dot" style="background:#55697E"></i>Sem compara&#231;&#227;o calcul&#225;vel</span><b><span id="l-invalid">&#8212;</span><span class="pct" id="lp-invalid"></span></b></div>
           </div>
         </div>
-        <div class="note">Regra: diferen&#231;a (&#916;) = Orion &#8722; Compras. Valores vazios ou n&#227;o num&#233;ricos n&#227;o s&#227;o tratados como zero.</div>
+        <div class="note">Na base Apoio Clientes, Compras vem de <b>TT TOTAL (coluna I)</b>. Regra: diferen&#231;a (&#916;) = Orion &#8722; Compras. Valores vazios ou n&#227;o num&#233;ricos n&#227;o s&#227;o tratados como zero.</div>
       </article>
 
       <article class="panel">
@@ -623,7 +623,7 @@ tbody tr.row-selected td{background:rgba(225,38,28,.2);border-top:1px solid #E12
 
     <div class="foot">
       <span class="logo-strap">CEVA LOGISTICS &#8226; CONTROL TOWER</span>
-      <span>Fonte: Base Transportadora + Apoio Clientes + Base Orion Ativa &#8226; ID B/E &#8226; regi&#227;o por UF &#8226; regra &#916; = Orion &#8722; Compras</span>
+      <span>Fonte: Base Transportadora + Apoio Clientes (Compras via TT TOTAL, coluna I) + Base Orion Ativa &#8226; ID B/E &#8226; regi&#227;o por UF &#8226; regra &#916; = Orion &#8722; Compras</span>
       <span id="counter" aria-live="polite"></span>
     </div>
   </div>
@@ -634,7 +634,7 @@ tbody tr.row-selected td{background:rgba(225,38,28,.2);border-top:1px solid #E12
     <h2 id="modalTitle">Editar / atualizar dados</h2>
     <p>Cole uma tabela consolidada em CSV ou TSV (delimitadores <b>; , ou tab</b> s&#227;o detectados automaticamente), com cabe&#231;alhos
     <b>RAZAO_SOCIAL, UF_DEST, CIDADE_DEST, Orion, Compras, Tipo Operacional, Regi&#227;o</b>. Para usar as bases de apoio, feche esta janela e
-    selecione as bases no bot&#227;o Importar bases. Par&#226;metros fixos: em <b>C&#243;pia de Apoio Transportadorav2</b>, a coluna <b>N</b> alimenta Tipo Operacional e <b>O/P</b> definem a cidade oficial; em <b>Base Orion Ativa</b>, a coluna <b>C</b> (<b>STATUS ROTA</b>) alimenta o filtro de status e <b>W/X</b> definem cidade/regi&#227;o. A atualiza&#231;&#227;o ocorre localmente no navegador.</p>
+    selecione as bases no bot&#227;o Importar bases. Em <b>Apoio Clientes</b>, o prazo de Compras passa a vir de <b>TT TOTAL (coluna I)</b>; <b>Transit Time COMPRAS (coluna L)</b> fica apenas como compatibilidade para bases antigas sem TT TOTAL. Par&#226;metros fixos: em <b>C&#243;pia de Apoio Transportadorav2</b>, a coluna <b>N</b> alimenta Tipo Operacional e <b>O/P</b> definem a cidade oficial; em <b>Base Orion Ativa</b>, a coluna <b>C</b> (<b>STATUS ROTA</b>) alimenta o filtro de status e <b>W/X</b> definem cidade/regi&#227;o. A atualiza&#231;&#227;o ocorre localmente no navegador.</p>
     <textarea id="paste" placeholder="RAZAO_SOCIAL;UF_DEST;CIDADE_DEST;Orion;Compras;Tipo Operacional;Regi&#227;o&#10;CLIENTE EXEMPLO;SP;SAO PAULO;5;4;Direto;Sudeste"></textarea>
     <div class="feedback" id="feedback"></div>
     <div class="modalactions">
@@ -1396,7 +1396,7 @@ function parseData(text,fileName=''){
     return {kind:'orion',meta:{orionWX:true,statusHeader:headC,statusColumn:'C',comprasColumn:'G',orionColumn:'AB',cityColumn:'W',regionColumn:'X'},rows};
   }
   if(hasClients){
-    const ix={cliente:index('Nome Fantasia','NOME FANTASIA','Cliente','Raz\u00e3o Social','Razao Social','RAZAO_SOCIAL'),uf:index('UF_DEST','UF Destino','UF','Estado'),cidade:index('CIDADE_DEST','Cidade Destino','Cidade','Destino'),compras:index('Transit Time COMPRAS','Compras','TT Compras','TT COMPRAS'),regiao:index('Regi\u00e3o','Regiao','Regional','Region')};
+    const ix={cliente:index('Nome Fantasia','NOME FANTASIA','Cliente','Raz\u00e3o Social','Razao Social','RAZAO_SOCIAL'),uf:index('UF_DEST','UF Destino','UF','Estado'),cidade:index('CIDADE_DEST','Cidade Destino','Cidade','Destino'),compras:(index('TT TOTAL')>=0?index('TT TOTAL'):index('Transit Time COMPRAS','Compras','TT Compras','TT COMPRAS')),regiao:index('Regi\u00e3o','Regiao','Regional','Region')};
     if(ix.cliente<0||ix.cidade<0) return null;
     return {kind:'clients',rows:data.map(row=>({
       cliente:get(row,ix.cliente),
