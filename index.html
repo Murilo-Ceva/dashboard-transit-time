@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CEVA | Transit Time Intelligence</title>
+<title>CEVA | Transit Time Intelligence | Nova Base Coluna I</title>
 <style>
 :root{
   --primary:#021D49; --marine:#1D4289; --cobalt:#407EC9; --sky:#6CACE4; --azure:#BDD6E6;
@@ -472,7 +472,7 @@ body.intro-playing{overflow:hidden}
       <div class="mastcopy">
         <div class="eyebrow">Control Tower</div>
         <h1>Transit Time Intelligence</h1>
-        <div class="sub">Comparativo Orion &#215; Compras &#8226; carrega CSVs do GitHub e permite filtro cruzado</div>
+        <div class="sub">Comparativo Orion &#215; TT Total (coluna I) &#8226; carrega CSVs do GitHub e permite filtro cruzado</div>
       </div>
       <div class="actions">
         <button class="btn" onclick="openEdit()">&#9998; Editar dados</button>
@@ -518,7 +518,7 @@ body.intro-playing{overflow:hidden}
         <input id="search" type="search" placeholder="cidade, cliente, UF&#8230;" oninput="update()">
       </div>
       <div class="filter-actions">
-        <label class="checkwrap" title="Exibir apenas rotas com Orion &#8800; Compras">
+        <label class="checkwrap" title="Exibir apenas rotas com Orion &#8800; TT Total">
           <input type="checkbox" id="onlyDiff" onchange="update()"> Somente divergentes
         </label>
         <button class="btn" onclick="resetFilters()">&#8634; Limpar</button>
@@ -529,10 +529,10 @@ body.intro-playing{overflow:hidden}
 
     <section class="kpis" aria-label="Indicadores">
       <div class="kpi" data-category="all" role="button" tabindex="0" title="Limpar seleções dos gráficos e exibir todas as rotas nos filtros atuais"><small>Rotas na sele&#231;&#227;o</small><strong id="k-total">&#8212;</strong><em id="k-total-sub">Registros de destino</em></div>
-      <div class="kpi good" data-category="equal" role="button" tabindex="0" title="Filtrar rotas conformes em todos os gráficos"><small>TT iguais &#8226; conformidade</small><strong id="k-equal">&#8212;</strong><em id="k-equal-sub">Orion = Compras</em><div class="progress"><i id="k-bar" style="width:0"></i></div></div>
+      <div class="kpi good" data-category="equal" role="button" tabindex="0" title="Filtrar rotas conformes em todos os gráficos"><small>TT iguais &#8226; conformidade</small><strong id="k-equal">&#8212;</strong><em id="k-equal-sub">Orion = TT Total</em><div class="progress"><i id="k-bar" style="width:0"></i></div></div>
       <div class="kpi warn" data-category="divergent" role="button" tabindex="0" title="Filtrar somente divergências em todos os gráficos"><small>Rotas divergentes</small><strong id="k-diff">&#8212;</strong><em id="k-diff-sub">Diferen&#231;a identificada</em><div class="progress"><i id="k-bar-warn" class="alert" style="width:0"></i></div></div>
-      <div class="kpi" data-category="up" role="button" tabindex="0" title="Filtrar rotas com prazo Orion maior"><small>Orion maior</small><strong id="k-up">&#8212;</strong><em>Orion &#8722; Compras &gt; 0</em></div>
-      <div class="kpi" data-category="down" role="button" tabindex="0" title="Filtrar rotas com prazo de Compras maior"><small>Compras maior</small><strong id="k-down">&#8212;</strong><em>Orion &#8722; Compras &lt; 0</em></div>
+      <div class="kpi" data-category="up" role="button" tabindex="0" title="Filtrar rotas com prazo Orion maior"><small>Orion maior</small><strong id="k-up">&#8212;</strong><em>Orion &#8722; TT Total &gt; 0</em></div>
+      <div class="kpi" data-category="down" role="button" tabindex="0" title="Filtrar rotas com TT Total maior"><small>TT Total maior</small><strong id="k-down">&#8212;</strong><em>Orion &#8722; TT Total &lt; 0</em></div>
       <div class="kpi side" data-category="divergent" role="button" tabindex="0" title="Examinar as rotas que compõem o saldo de diferenças"><small>Saldo de dias</small><strong id="k-days">&#8212;</strong><em id="k-days-sub">Soma alg&#233;brica das diferen&#231;as</em></div>
     </section>
 
@@ -545,7 +545,7 @@ body.intro-playing{overflow:hidden}
               <circle cx="93" cy="93" r="82" stroke="#123265"></circle>
               <circle id="seg-equal" data-category="equal" role="button" tabindex="0" aria-label="Filtrar: Sem divergência" cx="93" cy="93" r="82" stroke="#6CACE4"></circle>
               <circle id="seg-up" data-category="up" role="button" tabindex="0" aria-label="Filtrar: Orion maior" cx="93" cy="93" r="82" stroke="#E1261C"></circle>
-              <circle id="seg-down" data-category="down" role="button" tabindex="0" aria-label="Filtrar: Compras maior" cx="93" cy="93" r="82" stroke="#FF8674"></circle>
+              <circle id="seg-down" data-category="down" role="button" tabindex="0" aria-label="Filtrar: TT Total maior" cx="93" cy="93" r="82" stroke="#FF8674"></circle>
               <circle id="seg-invalid" data-category="missing" role="button" tabindex="0" aria-label="Filtrar: Sem comparação" cx="93" cy="93" r="82" stroke="#55697E"></circle>
             </svg>
             <div class="donuthole"><strong id="share">&#8212;</strong><small>das rotas</small></div>
@@ -553,17 +553,17 @@ body.intro-playing{overflow:hidden}
           <div class="legend">
             <div class="legend-row" data-category="equal" role="button" tabindex="0" title="Clique para filtrar nos demais painéis"><span><i class="dot" style="background:#6CACE4"></i>Sem diverg&#234;ncia</span><b><span id="l-equal">&#8212;</span><span class="pct" id="lp-equal"></span></b></div>
             <div class="legend-row" data-category="up" role="button" tabindex="0" title="Clique para filtrar nos demais painéis"><span><i class="dot" style="background:#E1261C"></i>Orion maior</span><b><span id="l-up">&#8212;</span><span class="pct" id="lp-up"></span></b></div>
-            <div class="legend-row" data-category="down" role="button" tabindex="0" title="Clique para filtrar nos demais painéis"><span><i class="dot" style="background:#FF8674"></i>Compras maior</span><b><span id="l-down">&#8212;</span><span class="pct" id="lp-down"></span></b></div>
+            <div class="legend-row" data-category="down" role="button" tabindex="0" title="Clique para filtrar nos demais painéis"><span><i class="dot" style="background:#FF8674"></i>TT Total maior</span><b><span id="l-down">&#8212;</span><span class="pct" id="lp-down"></span></b></div>
             <div class="legend-row" data-category="missing" role="button" tabindex="0" title="Clique para filtrar nos demais painéis"><span><i class="dot" style="background:#55697E"></i>Sem compara&#231;&#227;o calcul&#225;vel</span><b><span id="l-invalid">&#8212;</span><span class="pct" id="lp-invalid"></span></b></div>
           </div>
         </div>
-        <div class="note">Regra: diferen&#231;a (&#916;) = Orion &#8722; Compras. Valores vazios ou n&#227;o num&#233;ricos n&#227;o s&#227;o tratados como zero.</div>
+        <div class="note">Regra: diferen&#231;a (&#916;) = Orion &#8722; TT Total da coluna I. Valores vazios ou n&#227;o num&#233;ricos n&#227;o s&#227;o tratados como zero.</div>
       </article>
 
       <article class="panel">
         <div class="panel-head"><h2>Distribui&#231;&#227;o das diverg&#234;ncias</h2><span>Histograma de &#916; dias &#8226; somente rotas divergentes</span></div>
         <div class="hist" id="hist"></div>
-        <div class="note">Barras <b style="color:#FF8674">rosa</b>: prazo de Compras maior que Orion (&#916; negativo). Barras em <b style="color:#FF9C90">vermelho</b>: Orion maior que Compras (&#916; positivo).</div>
+        <div class="note">Barras <b style="color:#FF8674">rosa</b>: TT Total maior que Orion (&#916; negativo). Barras em <b style="color:#FF9C90">vermelho</b>: Orion maior que TT Total (&#916; positivo).</div>
       </article>
     </section>
 
@@ -571,7 +571,7 @@ body.intro-playing{overflow:hidden}
       <article class="panel">
         <div class="panel-head"><h2>Mapa de oportunidades por UF</h2><span>Top 10 &#8226; clique para cruzar os filtros</span></div>
         <div id="ranking" class="rank"></div>
-        <div class="note"><i class="dot" style="background:#E1261C"></i>Orion maior &nbsp;&#8226;&nbsp; <i class="dot" style="background:#FF8674"></i>Compras maior</div>
+        <div class="note"><i class="dot" style="background:#E1261C"></i>Orion maior &nbsp;&#8226;&nbsp; <i class="dot" style="background:#FF8674"></i>TT Total maior</div>
       </article>
 
       <article class="panel">
@@ -616,7 +616,7 @@ body.intro-playing{overflow:hidden}
 
     <section class="grid" style="grid-template-columns:1fr" id="t1t2Section">
       <article class="panel">
-        <div class="panel-head"><h2>Composição do prazo · T1 / T2</h2><span>Base Orion · coluna I = TT TOTAL · detalhes acompanham os filtros</span></div>
+        <div class="panel-head"><h2>Composição do prazo · T1 / T2</h2><span>Apoio Clientes · coluna I = TRANSIT TIME TOTAL VIAGEM · acompanha os filtros</span></div>
         <div class="tt-breakdown">
           <div class="tt-breakdown-card"><span>T1 · média das rotas</span><strong id="tt-t1">—</strong><small id="tt-t1-count">Sem informações</small></div>
           <div class="tt-breakdown-card"><span>T2 · média das rotas</span><strong id="tt-t2">—</strong><small id="tt-t2-count">Sem informações</small></div>
@@ -634,7 +634,7 @@ body.intro-playing{overflow:hidden}
 
     <div class="foot">
       <span class="logo-strap">CEVA LOGISTICS &#8226; CONTROL TOWER</span>
-      <span>Fonte: Base Transportadora + Apoio Clientes + Base Orion Ativa &#8226; ID B/E &#8226; regi&#227;o por UF &#8226; regra &#916; = Orion &#8722; Compras</span>
+      <span>Fonte: Base Transportadora + Apoio Clientes + Base Orion Ativa &#8226; ID B/E &#8226; regi&#227;o por UF &#8226; regra &#916; = Orion &#8722; TT Total (I)</span>
       <span id="counter" aria-live="polite"></span>
     </div>
   </div>
@@ -644,9 +644,9 @@ body.intro-playing{overflow:hidden}
   <div class="modalbox">
     <h2 id="modalTitle">Editar / atualizar dados</h2>
     <p>Cole uma tabela consolidada em CSV ou TSV (delimitadores <b>; , ou tab</b> s&#227;o detectados automaticamente), com cabe&#231;alhos
-    <b>RAZAO_SOCIAL, UF_DEST, CIDADE_DEST, Orion, Compras, Tipo Operacional, Regi&#227;o</b>. Para usar as bases de apoio, feche esta janela e
-    selecione as bases no bot&#227;o Importar bases. Par&#226;metros fixos: em <b>C&#243;pia de Apoio Transportadorav2</b>, a coluna <b>N</b> alimenta Tipo Operacional e <b>O/P</b> definem a cidade oficial; em <b>Base Orion Ativa</b>, a coluna <b>C</b> (<b>STATUS ROTA</b>) alimenta o filtro de status e <b>W/X</b> definem cidade/regi&#227;o. A atualiza&#231;&#227;o ocorre localmente no navegador.</p>
-    <textarea id="paste" placeholder="RAZAO_SOCIAL;UF_DEST;CIDADE_DEST;Orion;Compras;Tipo Operacional;Regi&#227;o&#10;CLIENTE EXEMPLO;SP;SAO PAULO;5;4;Direto;Sudeste"></textarea>
+    <b>RAZAO_SOCIAL, UF_DEST, CIDADE_DEST, Orion, TT Total, Tipo Operacional, Regi&#227;o</b>. Para usar as bases de apoio, feche esta janela e
+    selecione as bases no bot&#227;o Importar bases. Na nova <b>C&#243;pia de Apoio Clientes</b>, o painel detecta automaticamente o cabe&#231;alho mesmo quando existe uma linha de t&#237;tulo acima; usa <b>G=T1</b>, <b>H=T2</b>, <b>I=TRANSIT TIME TOTAL VIAGEM</b> e <b>AG=TRANS_TIME_DIA (Orion)</b>. A coluna <b>L</b> permanece apenas como refer&#234;ncia do arquivo e n&#227;o entra no comparativo. A atualiza&#231;&#227;o ocorre localmente no navegador.</p>
+    <textarea id="paste" placeholder="RAZAO_SOCIAL;UF_DEST;CIDADE_DEST;Orion;TT Total;Tipo Operacional;Regi&#227;o&#10;CLIENTE EXEMPLO;SP;SAO PAULO;5;4;Direto;Sudeste"></textarea>
     <div class="feedback" id="feedback"></div>
     <div class="modalactions">
       <button class="btn red" onclick="loadPasted()">Aplicar dados</button>
@@ -744,8 +744,8 @@ function num(v){
   if(v === null || v === undefined || v === '') return null;
   if(typeof v === 'number') return Number.isFinite(v) ? v : null;
   const text = String(v).trim();
-  const dplus = text.match(/^D\s*\+\s*(\d+)$/i);
-  if(dplus) return Number(dplus[1]);
+  const dplus = text.match(/^D\s*\+\s*([+-]?(?:\d+(?:[.,]\d*)?|[.,]\d+))$/i);
+  if(dplus) return Number(dplus[1].replace(',', '.'));
   if(!/^[+-]?(?:\d+(?:[.,]\d*)?|[.,]\d+)$/.test(text)) return null;
   const n = parseFloat(text.replace(',', '.'));
   return Number.isFinite(n) ? n : null;
@@ -756,7 +756,7 @@ function status(r){
   if(d === null) return {cls:'tag', txt:'Sem compara\u00e7\u00e3o'};
   if(d === 0)  return {cls:'tag good', txt:'Conforme'};
   if(d > 0)    return {cls:'tag bad', txt:'Orion +' + fmt(d) + 'd'};
-  return {cls:'tag mid', txt:'Compras +' + fmt(-d) + 'd'};
+  return {cls:'tag mid', txt:'TT Total +' + fmt(-d) + 'd'};
 }
 
 /* ============ filtros ============ */
@@ -893,7 +893,7 @@ function renderKpis(rs){
   $('k-total').textContent = fmt(rs.length);
   $('k-total-sub').textContent = rs.length === DATA.length ? 'Base completa' : (rs.length / (DATA.length || 1) * 100).toFixed(0) + '% da base \u2022 ' + fmt(inv) + ' sem compara\u00e7\u00e3o';
   $('k-equal').innerHTML = fmt(eq.length) + '<span class="pct">' + pctEq.toFixed(1) + '%</span>';
-  $('k-equal-sub').textContent = 'Orion = Compras \u2022 ' + fmt(comp.length) + ' compar\u00e1veis';
+  $('k-equal-sub').textContent = 'Orion = TT Total \u2022 ' + fmt(comp.length) + ' compar\u00e1veis';
   $('k-diff').textContent = fmt(diff);
   $('k-diff-sub').textContent = comp.length ? (diff / comp.length * 100).toFixed(1) + '% das rotas compar\u00e1veis divergem' : 'Sem rotas compar\u00e1veis';
   $('k-up').textContent = fmt(up.length);
@@ -973,11 +973,11 @@ function renderUF(rs){
   const arr = [...map.entries()].map(([uf, v]) => ({uf, ...v, tot: v.up + v.down})).sort((a,b) => b.tot - a.tot).slice(0, 10);
   const max = Math.max(1, ...arr.map(a => a.tot));
   $('ranking').innerHTML = arr.length ? arr.map(a =>
-    '<div class="rankitem clickable' + (getSelectValues('uf').includes(a.uf)?' is-active':'') + '" role="button" tabindex="0" data-uf="' + esc(a.uf) + '" title="' + fmt(a.up) + ' rotas Orion maior / ' + fmt(a.down) + ' Compras maior \u2014 filtrar ' + esc(a.uf) + '">' +
+    '<div class="rankitem clickable' + (getSelectValues('uf').includes(a.uf)?' is-active':'') + '" role="button" tabindex="0" data-uf="' + esc(a.uf) + '" title="' + fmt(a.up) + ' rotas Orion maior / ' + fmt(a.down) + ' TT Total maior \u2014 filtrar ' + esc(a.uf) + '">' +
     '<span class="lbl">' + esc(a.uf) + '</span>' +
     '<span class="bartrack">' +
       '<span class="barfill" data-uf-kind="up" title="Filtrar UF e Orion maior" style="width:' + (a.up / max * 100) + '%"></span>' +
-      '<span class="barfill down" data-uf-kind="down" title="Filtrar UF e Compras maior" style="width:' + (a.down / max * 100) + '%"></span>' +
+      '<span class="barfill down" data-uf-kind="down" title="Filtrar UF e TT Total maior" style="width:' + (a.down / max * 100) + '%"></span>' +
     '</span>' +
     '<b>' + fmt(a.tot) + ' <span class="pct">(' + fmt(a.up) + '+ / ' + fmt(a.down) + '\u2212)</span></b></div>'
   ).join('') : '<div class="note">Sem diverg\u00eancias por UF nesta sele\u00e7\u00e3o.</div>';
@@ -1062,24 +1062,24 @@ function renderInsights(rs){
   const saldo = comp.reduce((s,r) => s + delta(r), 0);
   const html = [];
   html.push('<div class="insight"><b>Conformidade do cadastro</b><p>' +
-    (comp.length ? '<b>' + conf.toFixed(1) + '%</b> das rotas compar\u00e1veis (' + fmt(eq) + ' de ' + fmt(comp.length) + ') t\u00eam transit time id\u00eantico em Orion e Compras.' : 'Sem rotas compar\u00e1veis na sele\u00e7\u00e3o.') +
+    (comp.length ? '<b>' + conf.toFixed(1) + '%</b> das rotas compar\u00e1veis (' + fmt(eq) + ' de ' + fmt(comp.length) + ') t\u00eam transit time id\u00eantico em Orion e TT Total.' : 'Sem rotas compar\u00e1veis na sele\u00e7\u00e3o.') +
     (inv ? ' ' + fmt(inv) + ' rota(s) sem um dos prazos v\u00e1lidos \u2014 n\u00e3o compar\u00e1veis.' : '') + '</p></div>');
   if(worst){
     const d = delta(worst);
-    html.push('<div class="insight"><b>Rota mais cr\u00edtica</b><p><b>' + esc(worst.cidade) + '/' + esc(worst.uf) + '</b> (' + esc(worst.cliente) + '): Orion ' + worst.orion + ' \u00d7 Compras ' + worst.compras + ' \u2192 \u0394 de <b>' + (d > 0 ? '+' : '') + fmt(d) + ' dias</b>. Priorizar revis\u00e3o deste cadastro.</p></div>');
+    html.push('<div class="insight"><b>Rota mais cr\u00edtica</b><p><b>' + esc(worst.cidade) + '/' + esc(worst.uf) + '</b> (' + esc(worst.cliente) + '): Orion ' + worst.orion + ' \u00d7 TT Total ' + worst.compras + ' \u2192 \u0394 de <b>' + (d > 0 ? '+' : '') + fmt(d) + ' dias</b>. Priorizar revis\u00e3o deste cadastro.</p></div>');
   }
   if(topUf){
     html.push('<div class="insight"><b>Concentra\u00e7\u00e3o geogr\u00e1fica</b><p><b>' + esc(topUf[0]) + '</b> concentra <b>' + fmt(topUf[1]) + '</b> diverg\u00eancia(s) \u2014 ' +
       (diff ? (topUf[1] / diff * 100).toFixed(0) : 0) + '% do total na sele\u00e7\u00e3o. Use o filtro de UF para isolar o problema.</p></div>');
   }
-  html.push('<div class="insight"><b>Dire\u00e7\u00e3o das diverg\u00eancias</b><p>Compras maior em <b>' + fmt(down.length) + '</b> rotas \u00d7 Orion maior em <b>' + fmt(up.length) + '</b>. Saldo alg\u00e9brico: <b>' + (saldo > 0 ? '+' : '') + fmt(saldo) + ' dias</b>' +
+  html.push('<div class="insight"><b>Dire\u00e7\u00e3o das diverg\u00eancias</b><p>TT Total maior em <b>' + fmt(down.length) + '</b> rotas \u00d7 Orion maior em <b>' + fmt(up.length) + '</b>. Saldo alg\u00e9brico: <b>' + (saldo > 0 ? '+' : '') + fmt(saldo) + ' dias</b>' +
     (diff ? ' \u2014 \u0394 m\u00e9dio de ' + (saldo / diff > 0 ? '+' : '') + (saldo / diff).toFixed(1).replace('.', ',') + ' dias por rota divergente.' : '.') + '</p></div>');
   if(crit){
     html.push('<div class="insight"><b>Severidade</b><p><b>' + fmt(crit) + '</b> rota(s) com |\u0394| \u2265 5 dias (' +
       (diff ? (crit / diff * 100).toFixed(0) : 0) + '% das diverg\u00eancias) \u2014 recomendada a\u00e7\u00e3o imediata de recadastro.</p></div>');
   }
   if(!diff && comp.length){
-    html.push('<div class="insight"><b>\u2714 Cadastro saud\u00e1vel</b><p>Nenhuma diverg\u00eancia entre Orion e Compras na sele\u00e7\u00e3o atual.</p></div>');
+    html.push('<div class="insight"><b>\u2714 Cadastro saud\u00e1vel</b><p>Nenhuma diverg\u00eancia entre Orion e TT Total na sele\u00e7\u00e3o atual.</p></div>');
   }
   $('insights').innerHTML = html.join('');
 }
@@ -1101,7 +1101,7 @@ function renderChips(){
   if(f.q)       chips.push(['search', 'Busca: "' + f.q + '"']);
   if(f.sev)     chips.push(['sev', '|Δ| ≥ ' + f.sev + ' dias']);
   if(f.onlyDiff) chips.push(['onlyDiff', 'Somente divergentes']);
-  const catLabel={equal:'TT iguais',up:'Orion maior',down:'Compras maior',missing:'Sem comparação',divergent:'Divergentes'};
+  const catLabel={equal:'TT iguais',up:'Orion maior',down:'TT Total maior',missing:'Sem comparação',divergent:'Divergentes'};
   if(drill.category) chips.push(['cross:category','Interativo: ' + catLabel[drill.category]]);
   if(drill.bin !== null) chips.push(['cross:bin','Faixa Δ: ' + BINS[drill.bin].label + ' dias']);
   if(drill.route) chips.push(['cross:route','Rota: ' + drill.route.cidade + '/' + drill.route.uf]);
@@ -1361,25 +1361,50 @@ const HEADER_MAP = {
   uf:['uf_dest','uf','estado','uf destino','ufdest'],
   cidade:['cidade_dest','cidade','destino','cidade destino','cidadedestino','cidade_destino'],
   orion:['orion','tt_orion','tt orion','transit_time_orion','transit time orion'],
-  compras:['compras','tt_compras','tt compras','transit_time_compras','transit time compras','prazo_compras','prazo compras'],
+  compras:['compras','tt_compras','tt compras','transit_time_compras','transit time compras','prazo_compras','prazo compras','tt total','tt_total','transit time total','transit_time_total','transit time total viagem','transit_time_total_viagem'],
   ponto:['tipo_operacional','tipo operacional','tipooperacional','tipo operac','tipoopera','ponto_operacional','ponto','pontooperacional'],
   regiao:['regiao','região','region','regional']
 };
 function parseData(text,fileName=''){
   const parsed = parseDelimited(text);
   if(!parsed || parsed.rows.length < 2) return null;
-  const header = parsed.rows[0].map(headerKey);
+
+  // A planilha 2026 pode trazer uma faixa/titulo antes do cabecalho real.
+  // Procuramos a melhor linha de cabecalho nas primeiras 20 linhas em vez de assumir a linha 1.
+  const headerScore = row => {
+    const keys = (row||[]).map(headerKey);
+    let score = 0;
+    if(keys.includes('idplanilha')) score += 6;
+    if(keys.includes('statusrota')) score += 4;
+    if(keys.includes('nomefantasia') || keys.includes('razaosocial')) score += 3;
+    if(keys.includes('cidadedest')) score += 3;
+    if(keys.includes('ufdest')) score += 3;
+    if(keys.includes('t1')) score += 2;
+    if(keys.includes('t2')) score += 2;
+    if(keys.includes('tttotal') || keys.includes('transittimetotalviagem')) score += 4;
+    if(keys.includes('transtimedia')) score += 4; // TRANS_TIME_DIA
+    if(keys.includes('tipooperacional')) score += 2;
+    return score;
+  };
+  let headerRowIndex = 0, bestHeaderScore = -1;
+  const scanLimit = Math.min(parsed.rows.length, 20);
+  for(let i=0;i<scanLimit;i++){
+    const score = headerScore(parsed.rows[i]);
+    if(score > bestHeaderScore){ bestHeaderScore = score; headerRowIndex = i; }
+  }
+  const header = parsed.rows[headerRowIndex].map(headerKey);
   const fileKey = headerKey(fileName);
   const index = (...aliases) => header.findIndex(h=>aliases.map(headerKey).includes(h));
   const get = (row,i) => i>=0&&i<row.length?row[i]:'';
-  const data = parsed.rows.slice(1).filter(row=>row.some(v=>String(v).trim()!==''));
+  const data = parsed.rows.slice(headerRowIndex+1).filter(row=>row.some(v=>String(v).trim()!==''));
   const headC = header[COL_REF.C] || '';
   const headW = header[COL_REF.W] || '';
   const headX = header[COL_REF.X] || '';
   const hasStatusC = headC === 'statusrota' || headC.startsWith('statusrota') || headC.includes('statusrota') || headC.includes('status');
   const hasCityW = headW.includes('cidade') || headW.includes('destino') || headW.includes('municipio');
   const hasRegionX = headX.includes('regiao') || headX.includes('regional') || headX.includes('reg') || headX.includes('uf');
-  const isNewClientLayout = header.includes('tttotal') && header.includes('t1') && header.includes('t2') && header.includes('transtimedia');
+  const hasTtTotalI = header.includes('tttotal') || header.includes('transittimetotalviagem') || header.includes('transittimetotal');
+  const isNewClientLayout = hasTtTotalI && header.includes('t1') && header.includes('t2') && header.includes('transtimedia') && (header.includes('idplanilha') || header.includes('statusrota'));
   const useCarrierOP = fileKey.includes('apoiotransportador') || fileKey.includes('transportadorav2') || fileKey.includes('transportadora') || ((header[COL_REF.O]||'').includes('cidade') || (header[COL_REF.P]||'').includes('cidade'));
   const useOrionWX = fileKey.includes('baseorionativa') || (fileKey.includes('orion') && fileKey.includes('ativa')) || headC === 'statusrota' || headC.startsWith('statusrota') || (hasStatusC && hasCityW) || (hasCityW && hasRegionX && header.includes('ttorion'));
   const hasCarrier = !useOrionWX && ((header.includes('ttorion') && header.includes('cliente')) || fileKey.includes('apoiotransportador') || fileKey.includes('transportadorav2'));
@@ -1387,8 +1412,9 @@ function parseData(text,fileName=''){
   // NOVO LAYOUT 2026: I = TT TOTAL (referência do comparativo), G/H = T1/T2.
   // Evita ler L=Transit Time COMPRAS e evita posições W/X/AB antigas.
   if(isNewClientLayout){
-    const ix={id:index('ID PLANILHA'),status:index('STATUS ROTA'),cliente:index('Nome Fantasia','RAZAO_SOCIAL'),uf:index('UF_DEST'),cidade:index('CIDADE_DEST'),regiao:index('REGIÃO'),tipo:index('Tipo Operacional'),orion:index('TRANS_TIME_DIA'),tt:index('TT TOTAL'),t1:index('T1'),t2:index('T2')};
-    return {kind:'orion',meta:{newLayout:true,comprasColumn:'I (TT TOTAL)',orionColumn:'AG (TRANS_TIME_DIA)'},rows:data.map(row=>({
+    const ix={id:index('ID PLANILHA'),status:index('STATUS ROTA'),cliente:index('Nome Fantasia','RAZAO_SOCIAL'),uf:index('UF_DEST'),cidade:index('CIDADE_DEST'),regiao:index('REGIÃO'),tipo:index('Tipo Operacional'),orion:index('TRANS_TIME_DIA','TT ORION','Transit Time Orion'),tt:index('TRANSIT TIME TOTAL VIAGEM','TT TOTAL','TRANSIT TIME TOTAL'),t1:index('T1'),t2:index('T2')};
+    if(ix.id<0 || ix.cidade<0 || ix.uf<0 || ix.orion<0 || ix.tt<0) return null;
+    return {kind:'orion',meta:{newLayout:true,headerRow:headerRowIndex+1,comprasColumn:'I (TRANSIT TIME TOTAL VIAGEM)',orionColumn:'AG (TRANS_TIME_DIA)'},rows:data.map(row=>({
       id:get(row,ix.id),cliente:get(row,ix.cliente),uf:get(row,ix.uf),cidade:get(row,ix.cidade),
       regiao:get(row,ix.regiao),ponto:normalizeTipoOperacional(get(row,ix.tipo)),
       statusOrion:normalizeStatusOrion(get(row,ix.status)),
@@ -1401,11 +1427,13 @@ function parseData(text,fileName=''){
     if(ix.cliente<0||ix.uf<0||ix.orion<0) return null;
     return {kind:'carrier',meta:{carrierOP:useCarrierOP},rows:data.map(row=>{
       const cidadeO = useCarrierOP ? get(row,COL_REF.O) : '';
-      const cidadeP = useCarrierOP ? get(row,COL_REF.P) : '';
-      const cidadeCorrigida = firstText(cidadeP,get(row,ix.cidadeCorrigida),cidadeO,get(row,ix.cidade));
-      const cidadeOriginal = firstText(cidadeO,get(row,ix.cidade),cidadeCorrigida);
+      const regiaoP = useCarrierOP ? get(row,COL_REF.P) : '';
+      // Transportadora v2 atual: G = cidade original, O = cidade corrigida, P = região e K = tipo operacional.
+      const cidadeCorrigida = firstText(get(row,ix.cidadeCorrigida),cidadeO,get(row,ix.cidade));
+      const cidadeOriginal = firstText(get(row,ix.cidade),cidadeCorrigida);
       const tipoOperacional = firstText(normalizeTipoOperacional(get(row,ix.tipo)),normalizeTipoOperacional(get(row,COL_REF.K)),normalizeTipoOperacional(get(row,COL_REF.N)));
-      return {id:get(row,COL_REF.B),cliente:get(row,ix.cliente),uf:get(row,ix.uf),cidade:cidadeOriginal,cidadeCorrigida:cidadeCorrigida,orion:num(get(row,ix.orion)),compras:num(get(row,ix.compras)),ponto:tipoOperacional,regiao:get(row,ix.regiao),statusOrion:''};
+      const regiaoTransportadora = firstText(get(row,ix.regiao),regiaoP);
+      return {id:get(row,COL_REF.B),cliente:get(row,ix.cliente),uf:get(row,ix.uf),cidade:cidadeOriginal,cidadeCorrigida:cidadeCorrigida,orion:num(get(row,ix.orion)),compras:num(get(row,ix.compras)),ponto:tipoOperacional,regiao:regiaoTransportadora,statusOrion:''};
     })};
   }
   if(useOrionWX){
@@ -1600,7 +1628,7 @@ function applyData(arr){
 }
 function loadPasted(){
   const parsed = parseData($('paste').value);
-  if(!parsed||parsed.kind!=='combined'){ $('feedback').textContent = '\u26a0 Use a tabela consolidada com Orion e Compras. Verifique cabe\u00e7alhos e delimitador.'; $('feedback').style.color = '#FF9C90'; return; }
+  if(!parsed||parsed.kind!=='combined'){ $('feedback').textContent = '\u26a0 Use uma tabela consolidada com Orion e TT Total. Verifique cabe\u00e7alhos e delimitador.'; $('feedback').style.color = '#FF9C90'; return; }
   const arr=parsed.rows;
   applyData(arr);
   $('feedback').style.color = '#9FE0B9';
@@ -1614,7 +1642,10 @@ async function readLocalText(file){
   catch{return new TextDecoder('windows-1252').decode(bytes);}
 }
 function applyParsedItems(parsed, sourceLabel){
-  if(parsed.some(item=>!item.data)) throw new Error('Não reconheci o formato de um dos arquivos.');
+  if(parsed.some(item=>!item.data)){
+    const bad = parsed.filter(item=>!item.data).map(item=>item.name||'arquivo sem nome').join(', ');
+    throw new Error('Não reconheci a estrutura de: ' + bad + '. O painel aceita a nova base mesmo quando existe uma linha de título antes do cabeçalho. Verifique se a linha de cabeçalho contém ID PLANILHA, STATUS ROTA, T1, T2, TRANSIT TIME TOTAL VIAGEM, CIDADE_DEST, UF_DEST e TRANS_TIME_DIA.');
+  }
   const combined=parsed.filter(item=>item.data.kind==='combined');
   const carriers=parsed.filter(item=>item.data.kind==='carrier');
   const clients=parsed.filter(item=>item.data.kind==='clients');
@@ -1641,20 +1672,20 @@ function applyParsedItems(parsed, sourceLabel){
   }
   applyData(arr);
   const importNotes=[];
-  if(carriers.some(item=>item.data.meta&&item.data.meta.carrierOP)) importNotes.push('Cópia de Apoio Transportadorav2: cidade oficial por colunas O/P.');
+  if(carriers.some(item=>item.data.meta&&item.data.meta.carrierOP)) importNotes.push('Cópia de Apoio Transportadorav2: G = cidade original; O = cidade corrigida; P = região; K = tipo operacional.');
   if(orions.length || SOURCE_CACHE.orion.length){
     const sourceRows=SOURCE_CACHE.orion.length?SOURCE_CACHE.orion:orions.flatMap(item=>item.data.rows||[]);
     const sourceCounts=sourceRows.reduce((a,r)=>{if(r.statusOrion)a[r.statusOrion]=(a[r.statusOrion]||0)+1;return a;},{});
     const counts=arr.reduce((a,r)=>{if(r.statusOrion)a[r.statusOrion]=(a[r.statusOrion]||0)+1;return a;},{});
     const matched=Object.values(counts).reduce((sum,n)=>sum+n,0);
-    importNotes.push(orions.some(x=>x.data.meta&&x.data.meta.newLayout)?'Novo layout: I = TT TOTAL; G = T1; H = T2; AG = TRANS_TIME_DIA (Orion); cidade, UF e região via cabeçalhos.':'Layout legado: C = STATUS ROTA; G = COMPRAS; W = cidade; X = região/UF; AB = ORION.');
+    importNotes.push(orions.some(x=>x.data.meta&&x.data.meta.newLayout)?'Novo layout: I = TRANSIT TIME TOTAL VIAGEM; G = T1; H = T2; AG = TRANS_TIME_DIA (Orion); cabeçalho detectado automaticamente mesmo com linha de título acima.':'Layout legado: C = STATUS ROTA; G = COMPRAS; W = cidade; X = região/UF; AB = ORION.');
     importNotes.push('STATUS ROTA lidos na origem: '+sourceRows.length + (sourceRows.length?': '+Object.entries(sourceCounts).map(([k,v])=>k+' '+v).join(' | '):'.'));
     importNotes.push('STATUS ROTA relacionados ao painel: '+matched+' de '+arr.length+' rotas' + (matched?': '+Object.entries(counts).map(([k,v])=>k+' '+v).join(' | '):'.'));
   }
   return {
     arr,
     loadedNames: parsed.map(item=>item.name).filter(Boolean),
-    message: arr.length + ' rotas importadas. Diferença calculada como Orion − Compras (na Base Orion Ativa: AB − G).' + (importNotes.length ? '\n' + importNotes.join('\n') : '')
+    message: arr.length + ' rotas importadas. ' + ((orions.some(x=>x.data.meta&&x.data.meta.newLayout) || SOURCE_CACHE.orion.some(r=>r.ttTotal!==null&&r.ttTotal!==undefined)) ? 'Diferença calculada como Orion − TT Total da coluna I.' : 'Diferença calculada como Orion − TT Total no layout legado.') + (importNotes.length ? '\n' + importNotes.join('\n') : '')
   };
 }
 async function readCSV(ev){
@@ -1667,13 +1698,11 @@ async function readCSV(ev){
   }catch(error){alert(error.message||'Não foi possível interpretar os arquivos selecionados.');}
   ev.target.value='';
 }
-const GITHUB_AUTO_BASE_FILES=[
-  'Cópia de Apoio Transportadorav2.csv',
-  'Cópia de Apoio Clientesv2 1.csv',
-  '01_Base_Transportadora.csv',
-  '02_Base_Orion_Ativa.csv',
-  '01_Base_Transportadora_modelo.csv',
-  '02_Base_Orion_Ativa_modelo.csv'
+const GITHUB_AUTO_BASE_GROUPS=[
+  ['Cópia de Apoio Transportadorav2.csv','Cópia de Apoio Transportadorav2 (1).csv','Cópia de Apoio Transportadorav2(1).csv'],
+  ['Cópia de Apoio Clientesv2 1(2).csv','Cópia de Apoio Clientesv2 1(1).csv','Cópia de Apoio Clientesv2 1.csv'],
+  ['01_Base_Transportadora.csv','01_Base_Transportadora_modelo.csv'],
+  ['02_Base_Orion_Ativa.csv','02_Base_Orion_Ativa_modelo.csv']
 ];
 async function fetchGithubBaseText(path){
   const url=new URL(encodeURI(path), window.location.href);
@@ -1687,13 +1716,15 @@ async function fetchGithubBaseText(path){
 async function autoLoadGithubBases(){
   if(!/github\.io$/i.test(location.hostname)) return;
   const loaded=[];
-  for(const name of GITHUB_AUTO_BASE_FILES){
-    try{
-      const text=await fetchGithubBaseText(name);
-      const data=parseData(text,name);
-      if(data) loaded.push({name,data});
-    }catch(error){
-      console.info('[CEVA] Base não carregada automaticamente:', name, error.message||error);
+  for(const variants of GITHUB_AUTO_BASE_GROUPS){
+    for(const name of variants){
+      try{
+        const text=await fetchGithubBaseText(name);
+        const data=parseData(text,name);
+        if(data){ loaded.push({name,data}); break; }
+      }catch(error){
+        console.info('[CEVA] Base não carregada automaticamente:', name, error.message||error);
+      }
     }
   }
   if(!loaded.length){
@@ -1711,7 +1742,7 @@ async function autoLoadGithubBases(){
 }
 function exportFiltered(){
   const rs = rows();
-  const head = ['RAZAO_SOCIAL','UF_DEST','CIDADE_DEST','TIPO_OPERACIONAL','STATUS_ROTA','ORION','COMPRAS','DELTA','REGIAO','STATUS'];
+  const head = ['RAZAO_SOCIAL','UF_DEST','CIDADE_DEST','TIPO_OPERACIONAL','STATUS_ROTA','ORION','TT_TOTAL_COL_I','DELTA_ORION_MENOS_TT_TOTAL','REGIAO','STATUS'];
   const lines = [head.join(';')].concat(rs.map(r => {
     const d = delta(r); const st = status(r).txt;
     return [r.cliente, r.uf, r.cidade, r.ponto, r.statusOrion, r.orion ?? '', r.compras ?? '', d === null ? '' : d, r.regiao, st].map(v => String(v).replace(/;/g, ',')).join(';');
@@ -1794,12 +1825,12 @@ function exportExcel(onlyPending=true){
   const selected=sortRows(rows());
   const rs=onlyPending?selected.filter(r=>delta(r)!==0):selected;
   if(!rs.length){alert('Não há '+(onlyPending?'pendências':'registros')+' para exportar com os filtros atuais.');return;}
-  const headers=['RAZ\u00c3O SOCIAL (CLIENTE)','UF DESTINO','CIDADE DESTINO','TIPO OPERACIONAL','STATUS ORION','REGI\u00c3O','TT ORION (DIAS)','T1 (DIAS)','T2 (DIAS)','TT TOTAL COLUNA I (DIAS)','DIFEREN\u00c7A ORION - COMPRAS (DIAS)','SITUA\u00c7\u00c3O','A\u00c7\u00c3O NECESS\u00c1RIA','RESPONS\u00c1VEL','PRAZO DE TRATATIVA','STATUS DA TRATATIVA','OBSERVA\u00c7\u00d5ES'];
+  const headers=['RAZ\u00c3O SOCIAL (CLIENTE)','UF DESTINO','CIDADE DESTINO','TIPO OPERACIONAL','STATUS ORION','REGI\u00c3O','TT ORION (DIAS)','T1 (DIAS)','T2 (DIAS)','TT TOTAL COLUNA I (DIAS)','DIFEREN\u00c7A ORION - TT TOTAL (DIAS)','SITUA\u00c7\u00c3O','A\u00c7\u00c3O NECESS\u00c1RIA','RESPONS\u00c1VEL','PRAZO DE TRATATIVA','STATUS DA TRATATIVA','OBSERVA\u00c7\u00d5ES'];
   const out=[headers];
   rs.forEach(r=>{
     const d=delta(r);
     out.push([r.cliente,r.uf,r.cidade,r.ponto,r.statusOrion,r.regiao,r.orion,r.t1,r.t2,r.compras,d,status(r).txt,
-      d===null?'Validar dados ausentes':d===0?'':'Validar prazos Orion x Compras',
+      d===null?'Validar dados ausentes':d===0?'':'Validar prazos Orion x TT Total',
       '', '', d===0?'':'A tratar', '']);
   });
   const f=readFilters();
@@ -1817,7 +1848,7 @@ function exportExcel(onlyPending=true){
     ['Cidade específica',drill.route?drill.route.cidade+'/'+drill.route.uf:'Todas'],
     ['Rotas exportadas',rs.length],['Comparáveis',comparable.length],['Conformes',eq],
     ['Divergentes',diff],['Sem comparação',rs.length-comparable.length],
-    ['Regra da diferença','Orion − Compras (dias)'],
+    ['Regra da diferença','Orion − TT Total da coluna I (dias)'],
     ['Nota','Colunas de tratativa editáveis no Excel. Exportação respeita filtros e ordenação atual.']
   ];
   const sheetName=onlyPending?'Pendencias':'Visao Filtrada';
