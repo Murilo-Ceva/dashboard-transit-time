@@ -24,7 +24,7 @@
 .fc-p{font-size:9px;font-weight:700;padding:5px 14px;border-radius:14px;border:1px solid;white-space:nowrap}
 .fc-p.d{background:#e3f4fb;color:#1581c0;border-color:#b5dff0}.fc-p.t{background:#efe9fb;color:#6b4fb3;border-color:#d3c7f0}
 body.dark .fc-p.d{background:#0f3a52;color:#7cc4ee;border-color:#1d5a7d}body.dark .fc-p.t{background:#2a2250;color:#bfa9f2;border-color:#473a8a}
-.fc-f{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:14px 0 10px;color:var(--fc);font-weight:700;font-size:12px}.fc-f em{font-style:normal}
+.fc-f{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:14px 0 10px;color:var(--fc);font-weight:700;font-size:12px}.fc-f em{font-style:normal}.fc-flow{display:flex;align-items:stretch;gap:6px;margin:12px 0 6px;overflow-x:auto;padding:2px 0 4px}.fc-stage{min-width:118px;flex:1;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 9px;color:var(--ink);line-height:1.2}.fc-stage small{display:block;color:var(--muted);font-size:8px;text-transform:uppercase;letter-spacing:.45px;margin-bottom:4px}.fc-stage b{display:block;font-size:11px}.fc-arrow{align-self:center;color:var(--fc);font-style:normal;font-weight:900;font-size:16px;padding:0 1px}.fc-raw{font-size:9px;line-height:1.35;color:var(--muted);margin:0 0 9px;white-space:normal}.fc-raw b{color:var(--ink)}
 .fc-b{display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid var(--line);padding-top:9px;font-weight:700;font-size:11px;letter-spacing:.3px}
 .fc-s{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}.fc-s i{font-style:normal;font-size:9px;padding:3px 8px;border-radius:10px;background:var(--bg);color:var(--muted)}
 #tip{display:none;position:fixed;z-index:200;pointer-events:none;max-width:340px;background:#0b2236;color:#fff;padding:7px 10px;border-radius:7px;font-size:11px;box-shadow:0 6px 20px #0006;line-height:1.5}#tip .t1{color:#9eb1c1;font-size:9px;text-transform:uppercase;margin-bottom:2px}
@@ -181,7 +181,60 @@ function render1(){
  xbar('#x1',D1,a,'Rotas selecionadas');renderTable('bt',a,bp,'bpage');
 }
 function filters2(){let x=$('#f2'),r=M.filter(z=>v(z,'CLIENTE')===client);x.innerHTML='';[['reg2','Região','REGIÃO'],['mod','Modalidade','MODALIDADE'],['tt','Situação TT','TT COMPRAS RECEBIDO?'],['pri','Prioridade','PRIORIDADE'],['tsp2','Transportadora','TRANSPORTADORA'],['org2','Origem','ORIGEM'],['stat2','Status validação','STATUS VALIDAÇÃO'],['alert','Alerta janela','ALERTA DE JANELA'],['point','Ponto entrega','PONTO DE ENTREGA TSP'],['jan2','Janela original','JANELA ORIGINAL'],['res2','Resumo','RESUMO'],['fluxo','Fluxo original','FLUXO ORIGINAL'],['prazo','Prazo TT','PRAZO TT (DIAS)']].forEach(z=>x.appendChild(ms(z[0],z[1],uniq(r,z[2]),f2,()=>{mp=1;render2()})))}
-function render2(){let a=cmx(),pend=a.filter(r=>v(r,'TT COMPRAS RECEBIDO?').includes('NÃO')),rec=a.filter(r=>!v(r,'TT COMPRAS RECEBIDO?').includes('NÃO')),dir=a.filter(r=>v(r,'MODALIDADE').toUpperCase().includes('DIRET')),tr=a.filter(r=>!v(r,'MODALIDADE').toUpperCase().includes('DIRET')),cr=a.filter(r=>v(r,'PRIORIDADE')==='CRÍTICA');$('#k2').innerHTML=card('🧭',a.length,'Fluxos','Universo filtrado',a)+card('🚛',dir.length,'Coletas diretas','',dir)+card('⏳',pend.length,'TT pendentes','',pend)+card('🚨',cr.length,'Críticos','',cr)+card('🔄',tr.length,'Transferências','',tr)+card('✅',rec.length,'TT recebidos','',rec);bindCards();{let t=cmx('mtt'),p=t.filter(isP).length;donutX('#mtt',[['Recebido',t.length-p,'#119966','✅'],['Ausente',p,'#f2a900','⏳']])}{let t=cmx('mmod'),d=t.filter(isD).length;donutX('#mmod',[['Direta',d,'#187cc2','🚛'],['Transferência',t.length-d,'#7555b7','🔄']])}externalDonut('#mrg',group(cmx('mrg'),'REGIÃO'),'mrg');hbars('#mpr',group(cmx('mpr'),'PRIORIDADE'),'mpr');xbar('#x2',D2,a,'Fluxos selecionados');$('#flows').innerHTML=a.map((r,i)=>{let ab=v(r,'TT COMPRAS RECEBIDO?').includes('NÃO'),dr=v(r,'MODALIDADE').toUpperCase().includes('DIRET'),pri=v(r,'PRIORIDADE'),col=pri==='CRÍTICA'?'#d50032':ab?'#d98a00':'#0f7b5c',pt=v(r,'PONTO DE ENTREGA TSP'),end=(!pt||pt.toUpperCase()==='COLETA NA ORIGEM')?'ENTREGA CONFORME TT':pt,al=v(r,'ALERTA DE JANELA'),conf=al&&al.toUpperCase()!=='SEM CONFLITO IDENTIFICADO',jn=v(r,'JANELA ORIGINAL')||'—',tip=[v(r,'TRANSPORTADORA')+' · '+v(r,'ORIGEM'),v(r,'FLUXO ORIGINAL')&&'Fluxo: '+v(r,'FLUXO ORIGINAL'),v(r,'RESUMO')&&'Resumo: '+v(r,'RESUMO'),'TT Compras: '+(v(r,'TT COMPRAS RECEBIDO?')||'—'),pri&&'Prioridade: '+pri,'Rotas ativas: '+v(r,'ROTAS ATIVAS'),'T1 médio: '+v(r,'T1 MÉDIO'),'T2 médio: '+v(r,'T2 MÉDIO'),'TT Total médio: '+v(r,'TT TOTAL MÉDIO'),'Orion médio: '+v(r,'ORION MÉDIO'),'Divergências: '+v(r,'DIVERGÊNCIAS ORION x TT TOTAL'),conf&&'Alerta: '+al,'Clique para abrir o detalhamento'].filter(Boolean).join('\n');return `<div class="fc" data-i="${i}" style="--fc:${col}" data-tip="${ceva_esc(tip)}"><div class="fc-h"><b>${ceva_esc(v(r,'TRANSPORTADORA'))}</b><span class="fc-r">${ceva_esc(v(r,'REGIÃO'))}</span><span class="fc-p ${dr?'d':'t'}">${dr?'DIRETA':'TRANSFERÊNCIA'}</span></div><div class="fc-f"><span>${ceva_esc(v(r,'ORIGEM'))}</span><em>➜</em><span>${ceva_esc(v(r,'MODALIDADE'))}</span><em>➜</em><span>${ceva_esc(end)}</span></div><div class="fc-b"><span>JANELA ${ceva_esc(jn)}</span><span class="fc-s"><i>🛣️ ${fmt(v(r,'ROTAS ATIVAS'))} ROTAS</i><i>⚖️ ${fmt(v(r,'DIVERGÊNCIAS ORION x TT TOTAL'))} DIVERG.</i><i>${ab?'⏳ TT AUSENTE':'✅ TT RECEBIDO'}</i>${conf?'<i>⚠️ ALERTA DE JANELA</i>':''}</span></div></div>`}).join('');$$('#flows .fc').forEach(x=>x.onclick=()=>{let r=a[+x.dataset.i];detail(v(r,'TRANSPORTADORA')+' · '+v(r,'ORIGEM'),[r])});renderTable('mt',a,mp,'mpage')}
+function flowClean(x){return String(x??'').replace(/\s+/g,' ').trim()}
+function flowHubFromOriginal(raw,modal){
+  const txt=flowClean(raw);
+  let m=txt.match(/TRANSFER[ÊE]NCIA\s+PELO\s+XD\s+(.+?)\s+E\s+ENTREGAMOS/i);
+  if(m)return 'XD '+flowClean(m[1]);
+  m=txt.match(/TRANSFER[ÊE]NCIA\s+PELO\s+(.+?)\s+EM\s+(.+?)\s+E\s+ENTREGAMOS/i);
+  if(m)return flowClean(m[1])+' • '+flowClean(m[2]);
+  if(String(modal||'').toUpperCase().includes('XD'))return 'XD / HUB';
+  return 'TRANSFERÊNCIA / AGREGADO';
+}
+function buildFlowStages(r){
+  const origem=flowClean(v(r,'ORIGEM'))||'Origem não informada';
+  const modal=flowClean(v(r,'MODALIDADE'));
+  const raw=flowClean(v(r,'FLUXO ORIGINAL'));
+  const ponto=flowClean(v(r,'PONTO DE ENTREGA TSP'));
+  const up=modal.toUpperCase();
+  if(up.includes('DIRET')){
+    let first='TSP COLETA DIRETO',second=origem;
+    const parts=raw.split(/\s*>\s*/).map(flowClean).filter(Boolean);
+    if(parts.length>=2){first=parts[0];second=parts.slice(1).join(' → ')}
+    return [
+      {k:'Coleta',v:first},
+      {k:'Origem / ponto',v:second},
+      {k:'Entrega',v:'ENTREGA FINAL CONFORME TT'}
+    ];
+  }
+  const hub=flowHubFromOriginal(raw,modal);
+  return [
+    {k:'Origem',v:origem},
+    {k:up.includes('XD')?'Transferência XD':'Transferência',v:hub},
+    {k:'Base / TSP',v:(ponto&&ponto.toUpperCase()!=='COLETA NA ORIGEM')?ponto:'BASE TSP'},
+    {k:'Entrega',v:'ENTREGA FINAL CONFORME TT'}
+  ];
+}
+function flowStagesHtml(r){
+  const st=buildFlowStages(r);
+  return st.map((x,i)=>`<div class="fc-stage"><small>${ceva_esc(x.k)}</small><b>${ceva_esc(x.v)}</b></div>${i<st.length-1?'<em class="fc-arrow">➜</em>':''}`).join('');
+}
+function render2(){
+  let a=cmx(),pend=a.filter(r=>v(r,'TT COMPRAS RECEBIDO?').includes('NÃO')),rec=a.filter(r=>!v(r,'TT COMPRAS RECEBIDO?').includes('NÃO')),dir=a.filter(r=>v(r,'MODALIDADE').toUpperCase().includes('DIRET')),tr=a.filter(r=>!v(r,'MODALIDADE').toUpperCase().includes('DIRET')),cr=a.filter(r=>v(r,'PRIORIDADE')==='CRÍTICA');
+  $('#k2').innerHTML=card('🧭',a.length,'Fluxos','Universo filtrado',a)+card('🚛',dir.length,'Coletas diretas','',dir)+card('⏳',pend.length,'TT pendentes','',pend)+card('🚨',cr.length,'Críticos','',cr)+card('🔄',tr.length,'Transferências','',tr)+card('✅',rec.length,'TT recebidos','',rec);
+  bindCards();
+  {let t=cmx('mtt'),p=t.filter(isP).length;donutX('#mtt',[['Recebido',t.length-p,'#119966','✅'],['Ausente',p,'#f2a900','⏳']])}
+  {let t=cmx('mmod'),d=t.filter(isD).length;donutX('#mmod',[['Direta',d,'#187cc2','🚛'],['Transferência',t.length-d,'#7555b7','🔄']])}
+  externalDonut('#mrg',group(cmx('mrg'),'REGIÃO'),'mrg');
+  hbars('#mpr',group(cmx('mpr'),'PRIORIDADE'),'mpr');
+  xbar('#x2',D2,a,'Fluxos selecionados');
+  $('#flows').innerHTML=a.map((r,i)=>{
+    let ab=v(r,'TT COMPRAS RECEBIDO?').includes('NÃO'),dr=v(r,'MODALIDADE').toUpperCase().includes('DIRET'),pri=v(r,'PRIORIDADE'),col=pri==='CRÍTICA'?'#d50032':ab?'#d98a00':'#0f7b5c',al=v(r,'ALERTA DE JANELA'),conf=al&&al.toUpperCase()!=='SEM CONFLITO IDENTIFICADO',jn=v(r,'JANELA ORIGINAL')||'—',raw=flowClean(v(r,'FLUXO ORIGINAL')),tip=[v(r,'TRANSPORTADORA')+' · '+v(r,'ORIGEM'),raw&&'Fluxo original: '+raw,v(r,'RESUMO')&&'Resumo: '+v(r,'RESUMO'),'TT Compras: '+(v(r,'TT COMPRAS RECEBIDO?')||'—'),pri&&'Prioridade: '+pri,'Rotas ativas: '+v(r,'ROTAS ATIVAS'),'T1 médio: '+v(r,'T1 MÉDIO'),'T2 médio: '+v(r,'T2 MÉDIO'),'TT Total médio: '+v(r,'TT TOTAL MÉDIO'),'Orion médio: '+v(r,'ORION MÉDIO'),'Divergências: '+v(r,'DIVERGÊNCIAS ORION x TT TOTAL'),conf&&'Alerta: '+al,'Clique para abrir o detalhamento'].filter(Boolean).join('\n');
+    return `<div class="fc" data-i="${i}" style="--fc:${col}" data-tip="${ceva_esc(tip)}"><div class="fc-h"><b>${ceva_esc(v(r,'TRANSPORTADORA'))}</b><span class="fc-r">${ceva_esc(v(r,'REGIÃO'))}</span><span class="fc-p ${dr?'d':'t'}">${dr?'DIRETA':'TRANSFERÊNCIA'}</span></div><div class="fc-flow">${flowStagesHtml(r)}</div><div class="fc-raw"><b>Fluxo original:</b> ${ceva_esc(raw||'Não informado')}</div><div class="fc-b"><span>JANELA ${ceva_esc(jn)}</span><span class="fc-s"><i>🛣️ ${fmt(v(r,'ROTAS ATIVAS'))} ROTAS</i><i>⚖️ ${fmt(v(r,'DIVERGÊNCIAS ORION x TT TOTAL'))} DIVERG.</i><i>${ab?'⏳ TT AUSENTE':'✅ TT RECEBIDO'}</i>${conf?'<i>⚠️ ALERTA DE JANELA</i>':''}</span></div></div>`
+  }).join('');
+  $$('#flows .fc').forEach(x=>x.onclick=()=>{let r=a[+x.dataset.i];detail(v(r,'TRANSPORTADORA')+' · '+v(r,'ORIGEM'),[r])});
+  renderTable('mt',a,mp,'mpage')
+}
 function renderTable(id,a,p,lbl){let pages=Math.max(1,Math.ceil(a.length/PS));p=Math.min(p,pages);$(id[0]==='#'?id:'#'+id).innerHTML=table(a.slice((p-1)*PS,p*PS));$('#'+lbl).textContent=`Página ${p} de ${pages} • ${fmt(a.length)} linhas`}
 $('#bpv').onclick=()=>{if(bp>1)bp--;render1()};$('#bpn').onclick=()=>{bp++;render1()};$('#mpv').onclick=()=>{if(mp>1)mp--;render2()};$('#mpn').onclick=()=>{mp++;render2()};
 const ceva_esc=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');const CEVA_PAL=['#2864c7','#7c3aed','#19a64a','#ff9f0a','#f53243','#10b7cf','#64748b','#ec4899'];
