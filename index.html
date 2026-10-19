@@ -1698,48 +1698,75 @@ async function readCSV(ev){
   }catch(error){alert(error.message||'Não foi possível interpretar os arquivos selecionados.');}
   ev.target.value='';
 }
-const GITHUB_AUTO_BASE_GROUPS=[
-  ['Cópia de Apoio Transportadorav2.csv','Cópia de Apoio Transportadorav2 (1).csv','Cópia de Apoio Transportadorav2(1).csv'],
-  ['Cópia de Apoio Clientesv2 1(2).csv','Cópia de Apoio Clientesv2 1(1).csv','Cópia de Apoio Clientesv2 1.csv'],
-  ['01_Base_Transportadora.csv','01_Base_Transportadora_modelo.csv'],
-  ['02_Base_Orion_Ativa.csv','02_Base_Orion_Ativa_modelo.csv']
+const GITHUB_RAW_BASE_URL='https://raw.githubusercontent.com/Murilo-Ceva/dashboard-transit-time/main/';
+
+// Fonte oficial do painel.
+// Ao abrir o HTML, estas bases do GitHub têm prioridade absoluta.
+// Não usamos versões (1), (2), 01_Base_* ou outras cópias para evitar duplicidade.
+const GITHUB_PRIMARY_BASES=[
+  {
+    label:'Base Clientes',
+    names:['Cópia de Apoio Clientesv2 1','Cópia de Apoio Clientesv2 1.csv']
+  },
+  {
+    label:'Base Transportadora',
+    names:['Cópia de Apoio Transportadorav2.csv']
+  }
 ];
+
 async function fetchGithubBaseText(path){
-  const url=new URL(encodeURI(path), window.location.href);
-  const res=await fetch(url.href,{cache:'no-store'});
-  if(!res.ok) throw new Error(path+' não encontrado no GitHub Pages.');
+  const encodedPath=path.split('/').map(encodeURIComponent).join('/');
+  const url=GITHUB_RAW_BASE_URL+encodedPath+'?v='+Date.now();
+  const res=await fetch(url,{cache:'no-store'});
+  if(!res.ok) throw new Error(path+' não encontrado no GitHub.');
   const bytes=new Uint8Array(await res.arrayBuffer());
   if(bytes[0]===0xEF&&bytes[1]===0xBB&&bytes[2]===0xBF) return new TextDecoder('utf-8').decode(bytes);
   try{return new TextDecoder('utf-8',{fatal:true}).decode(bytes);}
   catch{return new TextDecoder('windows-1252').decode(bytes);}
 }
-async function autoLoadGithubBases(){
-  if(!/github\.io$/i.test(location.hostname)) return;
-  const loaded=[];
-  for(const variants of GITHUB_AUTO_BASE_GROUPS){
-    for(const name of variants){
-      try{
-        const text=await fetchGithubBaseText(name);
-        const data=parseData(text,name);
-        if(data){ loaded.push({name,data}); break; }
-      }catch(error){
-        console.info('[CEVA] Base não carregada automaticamente:', name, error.message||error);
-      }
+
+async function fetchFirstAvailableGithubBase(spec){
+  const errors=[];
+  for(const name of spec.names){
+    try{
+      const text=await fetchGithubBaseText(name);
+      const data=parseData(text,name);
+      if(!data) throw new Error('estrutura não reconhecida');
+      return {name,data};
+    }catch(error){
+      errors.push(name+': '+(error.message||error));
     }
   }
-  if(!loaded.length){
-    $('counter').textContent='Nenhuma base CSV automática encontrada no GitHub. Use Importar bases.';
-    return;
-  }
+  throw new Error(spec.label+' não pôde ser carregada. '+errors.join(' | '));
+}
+
+async function autoLoadGithubBases(){
+  $('counter').textContent='Carregando bases oficiais do GitHub...';
   try{
-    const result=applyParsedItems(loaded,'GitHub');
-    $('counter').textContent=fmt(DATA.length)+' registros carregados do GitHub • '+result.loadedNames.join(' + ');
-    console.info('[CEVA] Bases carregadas automaticamente do GitHub:', result.loadedNames);
+    // Limpa qualquer cache/dado embutido antes de aplicar as bases oficiais.
+    SOURCE_CACHE.carrier=null;
+    SOURCE_CACHE.clients=[];
+    SOURCE_CACHE.orion=[];
+    ORION_STATUS_OPTIONS=[];
+
+    // Carrega SOMENTE as duas fontes oficiais do repositório.
+    const loaded=[];
+    for(const spec of GITHUB_PRIMARY_BASES){
+      loaded.push(await fetchFirstAvailableGithubBase(spec));
+    }
+
+    const result=applyParsedItems(loaded,'GitHub - fontes oficiais');
+    $('counter').textContent=
+      fmt(DATA.length)+' registros • Fonte: GitHub • '+
+      result.loadedNames.join(' + ');
+    console.info('[CEVA] Bases oficiais carregadas do GitHub:',result.loadedNames);
   }catch(error){
-    console.warn('[CEVA] Falha ao aplicar bases automáticas:', error);
-    $('counter').textContent='Bases CSV encontradas, mas não reconhecidas. Use Importar bases para validar.';
+    console.warn('[CEVA] Falha ao carregar as bases oficiais do GitHub:',error);
+    $('counter').textContent=
+      'Não foi possível carregar as bases oficiais do GitHub. Use Importar bases como contingência.';
   }
 }
+
 function exportFiltered(){
   const rs = rows();
   const head = ['RAZAO_SOCIAL','UF_DEST','CIDADE_DEST','TIPO_OPERACIONAL','STATUS_ROTA','ORION','TT_TOTAL_COL_I','DELTA_ORION_MENOS_TT_TOTAL','REGIAO','STATUS'];
